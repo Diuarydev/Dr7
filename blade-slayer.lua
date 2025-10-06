@@ -5,7 +5,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 -- SISTEMA DE KEY
-local KEYS_VALIDAS = { "vivian7realgoat" }
+local KEYS_VALIDAS = { "vivian7realgoat, iluminado55" }
 
 local function verificarKey()
     local playerGui = LocalPlayer:WaitForChild("PlayerGui")
