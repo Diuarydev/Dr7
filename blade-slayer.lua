@@ -1,9 +1,127 @@
+-- HUB DIUARYOG COM SISTEMA DE KEY
+-- Arquivo único completo
 
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
--- HUB FINAL AJUSTADO - DiuaryOG
+-- SISTEMA DE KEY
+local KEYS_VALIDAS = {
+    "iluminado55"
+}
+
+local function verificarKey()
+    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+    
+    -- Criar GUI de verificação
+    local ScreenGui = Instance.new("ScreenGui")
+    local Frame = Instance.new("Frame")
+    local UICorner = Instance.new("UICorner")
+    local Title = Instance.new("TextLabel")
+    local TextBox = Instance.new("TextBox")
+    local UICorner2 = Instance.new("UICorner")
+    local ConfirmButton = Instance.new("TextButton")
+    local UICorner3 = Instance.new("UICorner")
+    local StatusLabel = Instance.new("TextLabel")
+    
+    ScreenGui.Name = "KeySystemGui"
+    ScreenGui.Parent = playerGui
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    Frame.Size = UDim2.new(0, 350, 0, 200)
+    Frame.Position = UDim2.new(0.5, -175, 0.5, -100)
+    Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Frame.BorderSizePixel = 0
+    Frame.Parent = ScreenGui
+    
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = Frame
+    
+    Title.Size = UDim2.new(1, -20, 0, 40)
+    Title.Position = UDim2.new(0, 10, 0, 10)
+    Title.BackgroundTransparency = 1
+    Title.Text = "SISTEMA DE KEY"
+    Title.TextColor3 = Color3.new(1, 1, 1)
+    Title.TextSize = 20
+    Title.Font = Enum.Font.GothamBold
+    Title.Parent = Frame
+    
+    TextBox.Size = UDim2.new(0, 300, 0, 40)
+    TextBox.Position = UDim2.new(0.5, -150, 0, 60)
+    TextBox.PlaceholderText = "Digite sua key aqui..."
+    TextBox.Text = ""
+    TextBox.TextSize = 14
+    TextBox.Font = Enum.Font.Gotham
+    TextBox.TextColor3 = Color3.new(1, 1, 1)
+    TextBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    TextBox.BorderSizePixel = 0
+    TextBox.Parent = Frame
+    
+    UICorner2.CornerRadius = UDim.new(0, 8)
+    UICorner2.Parent = TextBox
+    
+    ConfirmButton.Size = UDim2.new(0, 300, 0, 40)
+    ConfirmButton.Position = UDim2.new(0.5, -150, 0, 110)
+    ConfirmButton.Text = "VERIFICAR KEY"
+    ConfirmButton.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+    ConfirmButton.TextColor3 = Color3.new(1, 1, 1)
+    ConfirmButton.TextSize = 16
+    ConfirmButton.Font = Enum.Font.GothamBold
+    ConfirmButton.BorderSizePixel = 0
+    ConfirmButton.Parent = Frame
+    
+    UICorner3.CornerRadius = UDim.new(0, 8)
+    UICorner3.Parent = ConfirmButton
+    
+    StatusLabel.Size = UDim2.new(1, -20, 0, 25)
+    StatusLabel.Position = UDim2.new(0, 10, 0, 160)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Text = ""
+    StatusLabel.TextColor3 = Color3.new(1, 1, 1)
+    StatusLabel.TextSize = 12
+    StatusLabel.Font = Enum.Font.Gotham
+    StatusLabel.Parent = Frame
+    
+    local keyValida = false
+    
+    ConfirmButton.MouseButton1Click:Connect(function()
+        local keyInput = TextBox.Text
+        
+        if keyInput == "" then
+            StatusLabel.Text = "Digite uma key!"
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            return
+        end
+        
+        for _, key in pairs(KEYS_VALIDAS) do
+            if keyInput == key then
+                keyValida = true
+                StatusLabel.Text = "KEY VÁLIDA! Iniciando script..."
+                StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+                ConfirmButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+                wait(1)
+                ScreenGui:Destroy()
+                return
+            end
+        end
+        
+        StatusLabel.Text = "KEY INVÁLIDA! Tente novamente."
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        TextBox.Text = ""
+    end)
+    
+    repeat wait(0.1) until keyValida
+    return keyValida
+end
+
+-- Verificar key antes de carregar o HUB
+if not verificarKey() then
+    return
+end
+
+-- HUB DIUARYOG
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
-local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
 local rerollRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("RerollOrnament")
@@ -23,7 +141,7 @@ screenGui.Name = "DiuaryOG"
 screenGui.Parent = playerGui
 
 local hubFrame = Instance.new("Frame")
-hubFrame.Size = UDim2.new(0, 180, 0, 300)  -- aumentei largura para caber o botão
+hubFrame.Size = UDim2.new(0, 180, 0, 300)
 hubFrame.Position = UDim2.new(0,50,0,50)
 hubFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
 hubFrame.Parent = screenGui
@@ -62,16 +180,16 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(0,150,0,30)
 title.Position = UDim2.new(0,0,0,0)
 title.BackgroundColor3 = Color3.fromRGB(30,30,30)
-title.TextColor3 = Color3.fromRGB(173, 216, 230)  -- azul bebê
+title.TextColor3 = Color3.fromRGB(173, 216, 230)
 title.TextScaled = true
-title.Font = Enum.Font.GothamBold  -- fonte bonita
+title.Font = Enum.Font.GothamBold
 title.Text = "DiuaryOG"
 title.Parent = hubFrame
 
--- BOTÃO MINIMIZAR (DESLOCADO)
+-- BOTÃO MINIMIZAR
 local minimizeBtn = Instance.new("TextButton")
 minimizeBtn.Size = UDim2.new(0,30,0,30)
-minimizeBtn.Position = UDim2.new(0,155,0,0)  -- ajustado para não cobrir o G
+minimizeBtn.Position = UDim2.new(0,155,0,0)
 minimizeBtn.BackgroundColor3 = Color3.fromRGB(200,200,0)
 minimizeBtn.Text = "-"
 minimizeBtn.TextColor3 = Color3.new(0,0,0)
@@ -181,3 +299,5 @@ for i=1,9 do
         print("✅ Stripes selecionados:", table.concat(STRIPES_DESEJADOS,", "))
     end)
 end
+
+print("HUB DiuaryOG carregado com sucesso!")
