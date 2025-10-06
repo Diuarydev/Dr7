@@ -2,10 +2,11 @@
 -- By DiuaryOG 💙
 
 local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
 
 -- SISTEMA DE KEY
-local KEYS_VALIDAS = { "vivian7realgoat, iluminado55" }
+local KEYS_VALIDAS = { "vivian7realgoat" , "fifa" }
 
 local function verificarKey()
     local playerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -88,8 +89,6 @@ verificarKey()
 
 -- HUB
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
-local player = Players.LocalPlayer
 local rerollRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("RerollOrnament")
 
 -- CONFIG
@@ -99,7 +98,7 @@ local AUTO_REROLL_ATIVO = false
 local STRIPES_DESEJADOS = {}
 
 -- GUI PRINCIPAL
-local playerGui = player:WaitForChild("PlayerGui")
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DiuaryOG"
 screenGui.Parent = playerGui
@@ -188,9 +187,12 @@ toggleButton.Parent = hubFrame
 -- DETECÇÃO AUTOMÁTICA DE STRIPES
 local function detectarStripes()
     local stripes = {}
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if string.match(obj.Name, "^Stripe%d+$") then
-            table.insert(stripes, obj)
+    local pasta = Workspace:FindFirstChild("Diuaryy")
+    if pasta then
+        for _, obj in pairs(pasta:GetDescendants()) do
+            if string.match(obj.Name, "^Stripe%d+$") then
+                table.insert(stripes, obj)
+            end
         end
     end
     return stripes
@@ -199,19 +201,27 @@ end
 -- FUNÇÃO AUTO-REROLL
 local function autoReroll()
     while AUTO_REROLL_ATIVO do
+        local achou = false
         pcall(function() rerollRemote:InvokeServer(ORNAMENT_ID) end)
         local todosStripes = detectarStripes()
         for _, stripe in pairs(todosStripes) do
             for _, stripeName in ipairs(STRIPES_DESEJADOS) do
                 if stripe.Name == stripeName then
                     foundLabel.Text = "🎯 Stripe: " .. stripeName
-                    AUTO_REROLL_ATIVO = false
-                    toggleButton.Text = "Ligar"
-                    toggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-                    return
+                    achou = true
+                    break
                 end
             end
+            if achou then break end
         end
+
+        if achou then
+            AUTO_REROLL_ATIVO = false
+            toggleButton.Text = "Ligar"
+            toggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+            return
+        end
+
         task.wait(DELAY_REROLL)
     end
 end
