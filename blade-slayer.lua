@@ -6,7 +6,7 @@ local LocalPlayer = Players.LocalPlayer
 
 -- SISTEMA DE KEY
 local KEYS_VALIDAS = {
-    "iluminado55"
+    "vivian7realgoat"
 }
 
 local function verificarKey()
