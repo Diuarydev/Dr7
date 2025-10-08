@@ -6,7 +6,7 @@ local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
 
 -- SISTEMA DE KEY
-local KEYS_VALIDAS = { "vivian7realgoat", "fifa" }
+local KEYS_VALIDAS = { "luh", "fifa" }
 
 local function verificarKey()
     local playerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -110,11 +110,31 @@ screenGui.Name = "DiuaryOG"
 screenGui.Parent = playerGui
 
 local hubFrame = Instance.new("Frame")
-hubFrame.Size = UDim2.new(0, 180, 0, 400)  -- Aumentei a altura
+hubFrame.Size = UDim2.new(0, 200, 0, 480)
 hubFrame.Position = UDim2.new(0, 50, 0, 50)
-hubFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+hubFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+hubFrame.BorderSizePixel = 0
 hubFrame.Parent = screenGui
 hubFrame.Active = true
+
+-- Sombra do HUB
+local shadow = Instance.new("Frame")
+shadow.Size = UDim2.new(1, 10, 1, 10)
+shadow.Position = UDim2.new(0, -5, 0, -5)
+shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+shadow.BackgroundTransparency = 0.7
+shadow.BorderSizePixel = 0
+shadow.ZIndex = 0
+shadow.Parent = hubFrame
+
+-- Cantos arredondados
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = hubFrame
+
+local shadowCorner = Instance.new("UICorner")
+shadowCorner.CornerRadius = UDim.new(0, 12)
+shadowCorner.Parent = shadow
 
 -- ARRASTAR
 local dragging = false
@@ -167,7 +187,7 @@ minimizeBtn.MouseButton1Click:Connect(function()
     for _, obj in pairs(hubFrame:GetChildren()) do
         if obj ~= title and obj ~= minimizeBtn then obj.Visible = not minimized end
     end
-    hubFrame.Size = minimized and UDim2.new(0, 180, 0, 30) or UDim2.new(0, 180, 0, 400)
+    hubFrame.Size = minimized and UDim2.new(0, 180, 0, 30) or UDim2.new(0, 180, 0, 480)
 end)
 
 -- LABEL DE STATUS
@@ -195,7 +215,7 @@ toggleButton.Parent = hubFrame
 -- BOTÃO AUTO CLICK
 local clickButton = Instance.new("TextButton")
 clickButton.Size = UDim2.new(0, 130, 0, 20)
-clickButton.Position = UDim2.new(0, 10, 0, 270)
+clickButton.Position = UDim2.new(0, 10, 0, 310)  -- Movido para baixo
 clickButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
 clickButton.TextColor3 = Color3.new(1, 1, 1)
 clickButton.Text = "AutoClick: OFF"
@@ -206,7 +226,7 @@ clickButton.Parent = hubFrame
 -- BOTÃO AUTO REBORN
 local rebornButton = Instance.new("TextButton")
 rebornButton.Size = UDim2.new(0, 130, 0, 20)
-rebornButton.Position = UDim2.new(0, 10, 0, 295)
+rebornButton.Position = UDim2.new(0, 10, 0, 335)  -- Movido para baixo
 rebornButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
 rebornButton.TextColor3 = Color3.new(1, 1, 1)
 rebornButton.Text = "AutoReborn: OFF"
@@ -217,7 +237,7 @@ rebornButton.Parent = hubFrame
 -- BOTÃO AUTO OPEN BAÚS
 local openButton = Instance.new("TextButton")
 openButton.Size = UDim2.new(0, 130, 0, 20)
-openButton.Position = UDim2.new(0, 10, 0, 320)
+openButton.Position = UDim2.new(0, 10, 0, 360)  -- Movido para baixo
 openButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
 openButton.TextColor3 = Color3.new(1, 1, 1)
 openButton.Text = "AutoOpen: OFF"
