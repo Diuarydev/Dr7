@@ -6,7 +6,7 @@ local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
 
 -- SISTEMA DE KEY
-local KEYS_VALIDAS = { "vivian7realgoat" , "fifa" }
+local KEYS_VALIDAS = { "vivian7realgoat", "fifa" }
 
 local function verificarKey()
     local playerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -90,11 +90,17 @@ verificarKey()
 -- HUB
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local rerollRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("RerollOrnament")
+local clickRemote = ReplicatedStorage.Remotes.PlayerClickAttack
+local rebornRemote = ReplicatedStorage.Remotes.PlayerReborn
+local openBoxRemote = ReplicatedStorage.Remotes.OpenAntiqueBox
 
 -- CONFIG
 local ORNAMENT_ID = 400002
 local DELAY_REROLL = 0.1
 local AUTO_REROLL_ATIVO = false
+local AUTO_CLICK_ATIVO = false
+local AUTO_REBORN_ATIVO = false
+local AUTO_OPEN_ATIVO = false
 local STRIPES_DESEJADOS = {}
 
 -- GUI PRINCIPAL
@@ -104,7 +110,7 @@ screenGui.Name = "DiuaryOG"
 screenGui.Parent = playerGui
 
 local hubFrame = Instance.new("Frame")
-hubFrame.Size = UDim2.new(0, 180, 0, 300)
+hubFrame.Size = UDim2.new(0, 180, 0, 400)  -- Aumentei a altura
 hubFrame.Position = UDim2.new(0, 50, 0, 50)
 hubFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 hubFrame.Parent = screenGui
@@ -161,7 +167,7 @@ minimizeBtn.MouseButton1Click:Connect(function()
     for _, obj in pairs(hubFrame:GetChildren()) do
         if obj ~= title and obj ~= minimizeBtn then obj.Visible = not minimized end
     end
-    hubFrame.Size = minimized and UDim2.new(0, 180, 0, 30) or UDim2.new(0, 180, 0, 300)
+    hubFrame.Size = minimized and UDim2.new(0, 180, 0, 30) or UDim2.new(0, 180, 0, 400)
 end)
 
 -- LABEL DE STATUS
@@ -175,19 +181,54 @@ foundLabel.Font = Enum.Font.GothamBold
 foundLabel.Text = "🎯 Stripe: NENHUM"
 foundLabel.Parent = hubFrame
 
--- BOTÃO TOGGLE
+-- BOTÃO TOGGLE REROLL
 local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 130, 0, 25)
 toggleButton.Position = UDim2.new(0, 10, 0, 65)
 toggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
 toggleButton.TextColor3 = Color3.new(1, 1, 1)
-toggleButton.Text = "Ligar"
+toggleButton.Text = "Reroll: OFF"
+toggleButton.TextScaled = true
+toggleButton.Font = Enum.Font.GothamBold
 toggleButton.Parent = hubFrame
+
+-- BOTÃO AUTO CLICK
+local clickButton = Instance.new("TextButton")
+clickButton.Size = UDim2.new(0, 130, 0, 20)
+clickButton.Position = UDim2.new(0, 10, 0, 270)
+clickButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+clickButton.TextColor3 = Color3.new(1, 1, 1)
+clickButton.Text = "AutoClick: OFF"
+clickButton.TextScaled = true
+clickButton.Font = Enum.Font.GothamBold
+clickButton.Parent = hubFrame
+
+-- BOTÃO AUTO REBORN
+local rebornButton = Instance.new("TextButton")
+rebornButton.Size = UDim2.new(0, 130, 0, 20)
+rebornButton.Position = UDim2.new(0, 10, 0, 295)
+rebornButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+rebornButton.TextColor3 = Color3.new(1, 1, 1)
+rebornButton.Text = "AutoReborn: OFF"
+rebornButton.TextScaled = true
+rebornButton.Font = Enum.Font.GothamBold
+rebornButton.Parent = hubFrame
+
+-- BOTÃO AUTO OPEN BAÚS
+local openButton = Instance.new("TextButton")
+openButton.Size = UDim2.new(0, 130, 0, 20)
+openButton.Position = UDim2.new(0, 10, 0, 320)
+openButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+openButton.TextColor3 = Color3.new(1, 1, 1)
+openButton.Text = "AutoOpen: OFF"
+openButton.TextScaled = true
+openButton.Font = Enum.Font.GothamBold
+openButton.Parent = hubFrame
 
 -- DETECÇÃO AUTOMÁTICA DE STRIPES
 local function detectarStripes()
     local stripes = {}
-    local pasta = Workspace:FindFirstChild("Diuaryy")
+    local pasta = Workspace:FindFirstChild(LocalPlayer.Name)
     if pasta then
         for _, obj in pairs(pasta:GetDescendants()) do
             if string.match(obj.Name, "^Stripe%d+$") then
@@ -217,7 +258,7 @@ local function autoReroll()
 
         if achou then
             AUTO_REROLL_ATIVO = false
-            toggleButton.Text = "Ligar"
+            toggleButton.Text = "Reroll: OFF"
             toggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
             return
         end
@@ -226,7 +267,40 @@ local function autoReroll()
     end
 end
 
--- TOGGLE LIGAR/DESLIGAR
+-- FUNÇÃO AUTO CLICK
+local function autoClick()
+    while AUTO_CLICK_ATIVO do
+        pcall(function()
+            clickRemote:FireServer({})
+        end)
+        task.wait(0.01)
+    end
+end
+
+-- FUNÇÃO AUTO REBORN
+local function autoReborn()
+    while AUTO_REBORN_ATIVO do
+        pcall(function()
+            rebornRemote:FireServer()
+        end)
+        task.wait(1)
+    end
+end
+
+-- FUNÇÃO AUTO OPEN BAÚS
+local function autoOpenBaus()
+    local baus = {820001, 820002, 820003, 820004, 820005}
+    while AUTO_OPEN_ATIVO do
+        for _, bauID in ipairs(baus) do
+            pcall(function()
+                openBoxRemote:FireServer(bauID)
+            end)
+            task.wait(0.01)
+        end
+    end
+end
+
+-- TOGGLE REROLL
 toggleButton.MouseButton1Click:Connect(function()
     if #STRIPES_DESEJADOS == 0 then
         warn("Selecione pelo menos um Stripe!")
@@ -235,12 +309,51 @@ toggleButton.MouseButton1Click:Connect(function()
     AUTO_REROLL_ATIVO = not AUTO_REROLL_ATIVO
     if AUTO_REROLL_ATIVO then
         foundLabel.Text = "🎯 Stripe: NENHUM"
-        toggleButton.Text = "Desligar"
+        toggleButton.Text = "Reroll: ON"
         toggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
         task.spawn(autoReroll)
     else
-        toggleButton.Text = "Ligar"
+        toggleButton.Text = "Reroll: OFF"
         toggleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    end
+end)
+
+-- TOGGLE AUTO CLICK
+clickButton.MouseButton1Click:Connect(function()
+    AUTO_CLICK_ATIVO = not AUTO_CLICK_ATIVO
+    if AUTO_CLICK_ATIVO then
+        clickButton.Text = "AutoClick: ON"
+        clickButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+        task.spawn(autoClick)
+    else
+        clickButton.Text = "AutoClick: OFF"
+        clickButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    end
+end)
+
+-- TOGGLE AUTO REBORN
+rebornButton.MouseButton1Click:Connect(function()
+    AUTO_REBORN_ATIVO = not AUTO_REBORN_ATIVO
+    if AUTO_REBORN_ATIVO then
+        rebornButton.Text = "AutoReborn: ON"
+        rebornButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+        task.spawn(autoReborn)
+    else
+        rebornButton.Text = "AutoReborn: OFF"
+        rebornButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    end
+end)
+
+-- TOGGLE AUTO OPEN
+openButton.MouseButton1Click:Connect(function()
+    AUTO_OPEN_ATIVO = not AUTO_OPEN_ATIVO
+    if AUTO_OPEN_ATIVO then
+        openButton.Text = "AutoOpen: ON"
+        openButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+        task.spawn(autoOpenBaus)
+    else
+        openButton.Text = "AutoOpen: OFF"
+        openButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
     end
 end)
 
@@ -253,6 +366,8 @@ for i = 1, 9 do
     cb.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
     cb.TextColor3 = Color3.new(1, 1, 1)
     cb.Text = stripeName
+    cb.TextScaled = true
+    cb.Font = Enum.Font.GothamBold
     cb.Parent = hubFrame
 
     cb.MouseButton1Click:Connect(function()
