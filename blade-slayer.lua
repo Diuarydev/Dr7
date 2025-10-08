@@ -271,7 +271,8 @@ end
 local function autoClick()
     while AUTO_CLICK_ATIVO do
         pcall(function()
-            clickRemote:FireServer({})
+            local args = {{}}
+            clickRemote:FireServer(unpack(args))
         end)
         task.wait(0.01)
     end
