@@ -1,4 +1,4 @@
--- HUB DIUARYOG PROFISSIONAL COM ABAS v3.0
+-- HUB DIUARYOG PROFISSIONAL COM ABAS v3.1
 -- By DiuaryOG 💙
 
 local Players = game:GetService("Players")
@@ -17,6 +17,7 @@ local rebornRemote = ReplicatedStorage.Remotes.PlayerReborn
 local openBoxRemote = ReplicatedStorage.Remotes.OpenAntiqueBox
 local angrySkillRemote = ReplicatedStorage.Remotes.PlayerAngrySkillHarm
 local heroSkillRemote = ReplicatedStorage.Remotes.HeroSkillHarm
+local rerollHaloRemote = ReplicatedStorage.Remotes.RerollHalo
 
 -- CONFIG
 local ORNAMENT_ID = 400002
@@ -27,8 +28,12 @@ local AUTO_REBORN_ATIVO = false
 local AUTO_OPEN_ATIVO = false
 local AUTO_ANGRY_SKILL_ATIVO = false
 local AUTO_HERO_SKILL_ATIVO = false
+local AUTO_HALO_BRONZE_ATIVO = false
+local AUTO_HALO_OURO_ATIVO = false
+local AUTO_HALO_DIAMANTE_ATIVO = false
 local ANGRY_SKILL_DELAY = 1
 local HERO_SKILL_DELAY = 0.01
+local HALO_DELAY = 0.001
 local STRIPES_DESEJADOS = {}
 local KEYS_VALIDAS = { "luh", "fifa" }
 local ABA_ATUAL = "Farm"
@@ -189,7 +194,7 @@ title.BackgroundTransparency = 1
 title.TextColor3 = Color3.fromRGB(120, 180, 255)
 title.TextSize = 22
 title.Font = Enum.Font.GothamBold
-title.Text = "⭐ Diuary"
+title.Text = "🥀 DiuaryOG Hub"
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = header
 
@@ -228,10 +233,6 @@ sidebar.Position = UDim2.new(0, 0, 0, 50)
 sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 sidebar.BorderSizePixel = 0
 sidebar.Parent = hubFrame
-
-local sidebarCorner = Instance.new("UICorner")
-sidebarCorner.CornerRadius = UDim.new(0, 0)
-sidebarCorner.Parent = sidebar
 
 -- CONTENT AREA
 local contentArea = Instance.new("Frame")
@@ -333,6 +334,7 @@ end
 local farmTab = createTabButton("Farm", "🎮", 10)
 local marcaTab = createTabButton("Marca", "🎯", 65)
 local skillsTab = createTabButton("Skills", "⚡", 120)
+local auraTab = createTabButton("Aura", "✨", 175)
 
 -- CONTAINERS DAS ABAS
 local farmContainer = Instance.new("Frame")
@@ -353,6 +355,12 @@ skillsContainer.BackgroundTransparency = 1
 skillsContainer.Visible = false
 skillsContainer.Parent = contentArea
 
+local auraContainer = Instance.new("Frame")
+auraContainer.Size = UDim2.new(1, 0, 1, 0)
+auraContainer.BackgroundTransparency = 1
+auraContainer.Visible = false
+auraContainer.Parent = contentArea
+
 -- FUNÇÃO PARA TROCAR ABA
 local function switchTab(tabName)
     ABA_ATUAL = tabName
@@ -364,11 +372,14 @@ local function switchTab(tabName)
     marcaTab.TextColor3 = Color3.fromRGB(150, 150, 180)
     skillsTab.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     skillsTab.TextColor3 = Color3.fromRGB(150, 150, 180)
+    auraTab.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    auraTab.TextColor3 = Color3.fromRGB(150, 150, 180)
     
     -- Esconder todos
     farmContainer.Visible = false
     marcaContainer.Visible = false
     skillsContainer.Visible = false
+    auraContainer.Visible = false
     
     -- Mostrar aba selecionada
     if tabName == "Farm" then
@@ -383,12 +394,17 @@ local function switchTab(tabName)
         skillsTab.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
         skillsTab.TextColor3 = Color3.new(1, 1, 1)
         skillsContainer.Visible = true
+    elseif tabName == "Aura" then
+        auraTab.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+        auraTab.TextColor3 = Color3.new(1, 1, 1)
+        auraContainer.Visible = true
     end
 end
 
 farmTab.MouseButton1Click:Connect(function() switchTab("Farm") end)
 marcaTab.MouseButton1Click:Connect(function() switchTab("Marca") end)
 skillsTab.MouseButton1Click:Connect(function() switchTab("Skills") end)
+auraTab.MouseButton1Click:Connect(function() switchTab("Aura") end)
 
 -- FUNÇÃO CRIAR BOTÃO
 local function createButton(text, parent, yPos)
@@ -510,6 +526,7 @@ end
 
 -- === ABA SKILLS ===
 local angrySkillButton, angrySkillStatus = createButton("☠️ AutoAngrySkill", skillsContainer, 10)
+local heroSkillButton, heroSkillStatus = createButton("⚔️ AutoHeroSkill", skillsContainer, 110)
 
 -- Slider Angry Skill
 local angrySliderLabel = Instance.new("TextLabel")
@@ -544,9 +561,6 @@ local angrySliderFillCorner = Instance.new("UICorner")
 angrySliderFillCorner.CornerRadius = UDim.new(1, 0)
 angrySliderFillCorner.Parent = angrySliderFill
 
--- Hero Skill
-local heroSkillButton, heroSkillStatus = createButton("⚔️ AutoHeroSkill", skillsContainer, 110)
-
 -- Slider Hero Skill
 local heroSliderLabel = Instance.new("TextLabel")
 heroSliderLabel.Size = UDim2.new(0, 340, 0, 20)
@@ -579,6 +593,26 @@ heroSliderFill.Parent = heroSliderBar
 local heroSliderFillCorner = Instance.new("UICorner")
 heroSliderFillCorner.CornerRadius = UDim.new(1, 0)
 heroSliderFillCorner.Parent = heroSliderFill
+
+-- === ABA AURA ===
+local haloInfo = Instance.new("TextLabel")
+haloInfo.Size = UDim2.new(0, 340, 0, 30)
+haloInfo.Position = UDim2.new(0, 10, 0, 10)
+haloInfo.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+haloInfo.TextColor3 = Color3.fromRGB(255, 215, 0)
+haloInfo.TextSize = 12
+haloInfo.Font = Enum.Font.GothamBold
+haloInfo.Text = "✨ Reroll de Halos Automático"
+haloInfo.BorderSizePixel = 0
+haloInfo.Parent = auraContainer
+
+local haloInfoCorner = Instance.new("UICorner")
+haloInfoCorner.CornerRadius = UDim.new(0, 10)
+haloInfoCorner.Parent = haloInfo
+
+local bronzeButton, bronzeStatus = createButton("🥉 Halo Bronze", auraContainer, 50)
+local ouroButton, ouroStatus = createButton("🥇 Halo Ouro", auraContainer, 100)
+local diamanteButton, diamanteStatus = createButton("💎 Halo Diamante", auraContainer, 150)
 
 -- FUNÇÕES
 local function detectarStripes()
@@ -650,12 +684,30 @@ local function usarHeroSkills()
     end
 end
 
-local function autoDungeon()
-    while AUTO_DUNGEON_ATIVO do
+local function autoHaloBronze()
+    while AUTO_HALO_BRONZE_ATIVO do
         pcall(function()
-            dungeonRemote:InvokeServer()
+            rerollHaloRemote:InvokeServer(1)
         end)
-        task.wait(0.5)
+        task.wait(HALO_DELAY)
+    end
+end
+
+local function autoHaloOuro()
+    while AUTO_HALO_OURO_ATIVO do
+        pcall(function()
+            rerollHaloRemote:InvokeServer(2)
+        end)
+        task.wait(HALO_DELAY)
+    end
+end
+
+local function autoHaloDiamante()
+    while AUTO_HALO_DIAMANTE_ATIVO do
+        pcall(function()
+            rerollHaloRemote:InvokeServer(3)
+        end)
+        task.wait(HALO_DELAY)
     end
 end
 
@@ -665,6 +717,8 @@ local function autoReroll()
             rerollRemote:InvokeServer(ORNAMENT_ID)
         end)
         
+        task.wait(0.2)
+        
         local todosStripes = detectarStripes()
         local achou = false
         
@@ -672,6 +726,9 @@ local function autoReroll()
             for _, name in ipairs(STRIPES_DESEJADOS) do
                 if stripe.Name == name then
                     foundLabel.Text = "🎯 Encontrado: " .. name .. "!"
+                    AUTO_REROLL_ATIVO = false
+                    toggleStatus.Text = "OFF"
+                    toggleStatus.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
                     achou = true
                     break
                 end
@@ -680,9 +737,6 @@ local function autoReroll()
         end
         
         if achou then
-            AUTO_REROLL_ATIVO = false
-            toggleStatus.Text = "OFF"
-            toggleStatus.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
             return
         end
         
@@ -733,7 +787,44 @@ heroSkillButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Sliders funcionais
+bronzeButton.MouseButton1Click:Connect(function()
+    AUTO_HALO_BRONZE_ATIVO = not AUTO_HALO_BRONZE_ATIVO
+    bronzeStatus.Text = AUTO_HALO_BRONZE_ATIVO and "ON" or "OFF"
+    bronzeStatus.BackgroundColor3 = AUTO_HALO_BRONZE_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    if AUTO_HALO_BRONZE_ATIVO then task.spawn(autoHaloBronze) end
+end)
+
+ouroButton.MouseButton1Click:Connect(function()
+    AUTO_HALO_OURO_ATIVO = not AUTO_HALO_OURO_ATIVO
+    ouroStatus.Text = AUTO_HALO_OURO_ATIVO and "ON" or "OFF"
+    ouroStatus.BackgroundColor3 = AUTO_HALO_OURO_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    if AUTO_HALO_OURO_ATIVO then task.spawn(autoHaloOuro) end
+end)
+
+diamanteButton.MouseButton1Click:Connect(function()
+    AUTO_HALO_DIAMANTE_ATIVO = not AUTO_HALO_DIAMANTE_ATIVO
+    diamanteStatus.Text = AUTO_HALO_DIAMANTE_ATIVO and "ON" or "OFF"
+    diamanteStatus.BackgroundColor3 = AUTO_HALO_DIAMANTE_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    if AUTO_HALO_DIAMANTE_ATIVO then task.spawn(autoHaloDiamante) end
+end)
+
+toggleButton.MouseButton1Click:Connect(function()
+    if #STRIPES_DESEJADOS == 0 then
+        foundLabel.Text = "⚠️ Selecione pelo menos 1 stripe!"
+        return
+    end
+    AUTO_REROLL_ATIVO = not AUTO_REROLL_ATIVO
+    toggleStatus.Text = AUTO_REROLL_ATIVO and "ON" or "OFF"
+    toggleStatus.BackgroundColor3 = AUTO_REROLL_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    if AUTO_REROLL_ATIVO then
+        foundLabel.Text = "🎯 Procurando stripe..."
+        task.spawn(autoReroll)
+    else
+        foundLabel.Text = "🎯 Status: Parado"
+    end
+end)
+
+-- SLIDERS
 local angryDragging = false
 local heroDragging = false
 
@@ -786,32 +877,9 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
-dungeonButton.MouseButton1Click:Connect(function()
-    AUTO_DUNGEON_ATIVO = not AUTO_DUNGEON_ATIVO
-    dungeonStatus.Text = AUTO_DUNGEON_ATIVO and "ON" or "OFF"
-    dungeonStatus.BackgroundColor3 = AUTO_DUNGEON_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    if AUTO_DUNGEON_ATIVO then task.spawn(autoDungeon) end
-end)
-
-toggleButton.MouseButton1Click:Connect(function()
-    if #STRIPES_DESEJADOS == 0 then
-        foundLabel.Text = "⚠️ Selecione pelo menos 1 stripe!"
-        return
-    end
-    AUTO_REROLL_ATIVO = not AUTO_REROLL_ATIVO
-    toggleStatus.Text = AUTO_REROLL_ATIVO and "ON" or "OFF"
-    toggleStatus.BackgroundColor3 = AUTO_REROLL_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    if AUTO_REROLL_ATIVO then
-        foundLabel.Text = "🎯 Procurando stripe..."
-        task.spawn(autoReroll)
-    else
-        foundLabel.Text = "🎯 Status: Parado"
-    end
-end)
-
 -- Inicializar na aba Farm
 switchTab("Farm")
 
-print("✅ HUB DiuaryOG v3.0 carregado!")
-print("📌 Sistema de Abas Profissional")
-print("🎮 Compatível com PC e Mobile")
+print("✅ HUB DiuaryOG v3.1 carregado!")
+print("📌 4 Abas: Farm, Marca, Skills, Aura")
+print("🎮 Tudo funcional e corrigido!")
