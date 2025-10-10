@@ -717,7 +717,7 @@ local function autoReroll()
             rerollRemote:InvokeServer(ORNAMENT_ID)
         end)
         
-        task.wait(0.2)
+        task.wait(0.01)
         
         local todosStripes = detectarStripes()
         local achou = false
