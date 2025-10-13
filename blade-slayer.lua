@@ -794,7 +794,7 @@ local function autoClick()
             local args = {{}}
             clickRemote:FireServer(unpack(args))
         end)
-        task.wait(0.01)
+        task.wait(0.001)
     end
 end
 
