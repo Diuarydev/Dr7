@@ -881,7 +881,7 @@ local function autoReroll()
         pcall(function()
             rerollRemote:InvokeServer(ORNAMENT_ID)
         end)
-        task.wait(DELAY_REROLL)
+        task.wait(0.001)
     end
 end
 
