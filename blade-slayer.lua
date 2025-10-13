@@ -814,7 +814,7 @@ local function autoOpenBaus()
             pcall(function()
                 openBoxRemote:FireServer(bauID)
             end)
-            task.wait(0.01)
+            task.wait(0.001)
         end
     end
 end
@@ -841,7 +841,7 @@ local function autoHaloBronze()
         pcall(function()
             rerollHaloRemote:InvokeServer(1)
         end)
-        task.wait(HALO_DELAY)
+        task.wait(0.001)
     end
 end
 
@@ -850,7 +850,7 @@ local function autoHaloOuro()
         pcall(function()
             rerollHaloRemote:InvokeServer(2)
         end)
-        task.wait(HALO_DELAY)
+        task.wait(0.001)
     end
 end
 
