@@ -628,71 +628,87 @@ foundCorner.Parent = foundLabel
 local respirationSkillButton, respirationSkillStatus = createButton("☠️ RespirationSkill", skillsContainer, 10)
 local skillDMGButton, skillDMGStatus = createButton("⚔️ SkillDMG", skillsContainer, 110)
 
--- Slider RespirationSkill
-local respirationSliderLabel = Instance.new("TextLabel")
-respirationSliderLabel.Size = UDim2.new(0, 340, 0, 20)
-respirationSliderLabel.Position = UDim2.new(0, 10, 0, 60)
-respirationSliderLabel.BackgroundTransparency = 1
-respirationSliderLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
-respirationSliderLabel.TextSize = 11
-respirationSliderLabel.Font = Enum.Font.GothamBold
-respirationSliderLabel.Text = string.format("Delay: %.2fs", RESPIRATION_SKILL_DELAY)
-respirationSliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-respirationSliderLabel.Parent = skillsContainer
+-- Input RespirationSkill
+local respirationDelayLabel = Instance.new("TextLabel")
+respirationDelayLabel.Size = UDim2.new(0, 100, 0, 20)
+respirationDelayLabel.Position = UDim2.new(0, 10, 0, 60)
+respirationDelayLabel.BackgroundTransparency = 1
+respirationDelayLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
+respirationDelayLabel.TextSize = 11
+respirationDelayLabel.Font = Enum.Font.GothamBold
+respirationDelayLabel.Text = "Delay (segundos):"
+respirationDelayLabel.TextXAlignment = Enum.TextXAlignment.Left
+respirationDelayLabel.ZIndex = 100003
+respirationDelayLabel.Parent = skillsContainer
 
-local respirationSliderBar = Instance.new("Frame")
-respirationSliderBar.Size = UDim2.new(0, 340, 0, 8)
-respirationSliderBar.Position = UDim2.new(0, 10, 0, 85)
-respirationSliderBar.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-respirationSliderBar.BorderSizePixel = 0
-respirationSliderBar.Parent = skillsContainer
+local respirationDelayInput = Instance.new("TextBox")
+respirationDelayInput.Size = UDim2.new(0, 340, 0, 30)
+respirationDelayInput.Position = UDim2.new(0, 10, 0, 80)
+respirationDelayInput.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+respirationDelayInput.TextColor3 = Color3.new(1, 1, 1)
+respirationDelayInput.PlaceholderText = "0.01 a 5"
+respirationDelayInput.Text = tostring(RESPIRATION_SKILL_DELAY)
+respirationDelayInput.TextSize = 13
+respirationDelayInput.Font = Enum.Font.Gotham
+respirationDelayInput.ClearTextOnFocus = false
+respirationDelayInput.BorderSizePixel = 0
+respirationDelayInput.ZIndex = 100003
+respirationDelayInput.Parent = skillsContainer
 
-local respirationSliderCorner = Instance.new("UICorner")
-respirationSliderCorner.CornerRadius = UDim.new(1, 0)
-respirationSliderCorner.Parent = respirationSliderBar
+local respirationInputCorner = Instance.new("UICorner")
+respirationInputCorner.CornerRadius = UDim.new(0, 8)
+respirationInputCorner.Parent = respirationDelayInput
 
-local respirationSliderFill = Instance.new("Frame")
-respirationSliderFill.Size = UDim2.new(RESPIRATION_SKILL_DELAY/5, 0, 1, 0)
-respirationSliderFill.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-respirationSliderFill.BorderSizePixel = 0
-respirationSliderFill.Parent = respirationSliderBar
+respirationDelayInput.FocusLost:Connect(function()
+    local valor = tonumber(respirationDelayInput.Text)
+    if valor then
+        RESPIRATION_SKILL_DELAY = math.clamp(valor, 0.01, 5)
+        respirationDelayInput.Text = string.format("%.2f", RESPIRATION_SKILL_DELAY)
+    else
+        respirationDelayInput.Text = string.format("%.2f", RESPIRATION_SKILL_DELAY)
+    end
+end)
 
-local respirationSliderFillCorner = Instance.new("UICorner")
-respirationSliderFillCorner.CornerRadius = UDim.new(1, 0)
-respirationSliderFillCorner.Parent = respirationSliderFill
+-- Input SkillDMG
+local skillDMGDelayLabel = Instance.new("TextLabel")
+skillDMGDelayLabel.Size = UDim2.new(0, 100, 0, 20)
+skillDMGDelayLabel.Position = UDim2.new(0, 10, 0, 160)
+skillDMGDelayLabel.BackgroundTransparency = 1
+skillDMGDelayLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
+skillDMGDelayLabel.TextSize = 11
+skillDMGDelayLabel.Font = Enum.Font.GothamBold
+skillDMGDelayLabel.Text = "Delay (segundos):"
+skillDMGDelayLabel.TextXAlignment = Enum.TextXAlignment.Left
+skillDMGDelayLabel.ZIndex = 100003
+skillDMGDelayLabel.Parent = skillsContainer
 
--- Slider SkillDMG
-local skillDMGSliderLabel = Instance.new("TextLabel")
-skillDMGSliderLabel.Size = UDim2.new(0, 340, 0, 20)
-skillDMGSliderLabel.Position = UDim2.new(0, 10, 0, 160)
-skillDMGSliderLabel.BackgroundTransparency = 1
-skillDMGSliderLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
-skillDMGSliderLabel.TextSize = 11
-skillDMGSliderLabel.Font = Enum.Font.GothamBold
-skillDMGSliderLabel.Text = string.format("Delay: %.2fs", SKILL_DMG_DELAY)
-skillDMGSliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-skillDMGSliderLabel.Parent = skillsContainer
+local skillDMGDelayInput = Instance.new("TextBox")
+skillDMGDelayInput.Size = UDim2.new(0, 340, 0, 30)
+skillDMGDelayInput.Position = UDim2.new(0, 10, 0, 180)
+skillDMGDelayInput.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+skillDMGDelayInput.TextColor3 = Color3.new(1, 1, 1)
+skillDMGDelayInput.PlaceholderText = "0.001 a 5"
+skillDMGDelayInput.Text = tostring(SKILL_DMG_DELAY)
+skillDMGDelayInput.TextSize = 13
+skillDMGDelayInput.Font = Enum.Font.Gotham
+skillDMGDelayInput.ClearTextOnFocus = false
+skillDMGDelayInput.BorderSizePixel = 0
+skillDMGDelayInput.ZIndex = 100003
+skillDMGDelayInput.Parent = skillsContainer
 
-local skillDMGSliderBar = Instance.new("Frame")
-skillDMGSliderBar.Size = UDim2.new(0, 340, 0, 8)
-skillDMGSliderBar.Position = UDim2.new(0, 10, 0, 185)
-skillDMGSliderBar.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-skillDMGSliderBar.BorderSizePixel = 0
-skillDMGSliderBar.Parent = skillsContainer
+local skillDMGInputCorner = Instance.new("UICorner")
+skillDMGInputCorner.CornerRadius = UDim.new(0, 8)
+skillDMGInputCorner.Parent = skillDMGDelayInput
 
-local skillDMGSliderCorner = Instance.new("UICorner")
-skillDMGSliderCorner.CornerRadius = UDim.new(1, 0)
-skillDMGSliderCorner.Parent = skillDMGSliderBar
-
-local skillDMGSliderFill = Instance.new("Frame")
-skillDMGSliderFill.Size = UDim2.new(SKILL_DMG_DELAY/5, 0, 1, 0)
-skillDMGSliderFill.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-skillDMGSliderFill.BorderSizePixel = 0
-skillDMGSliderFill.Parent = skillDMGSliderBar
-
-local skillDMGSliderFillCorner = Instance.new("UICorner")
-skillDMGSliderFillCorner.CornerRadius = UDim.new(1, 0)
-skillDMGSliderFillCorner.Parent = skillDMGSliderFill
+skillDMGDelayInput.FocusLost:Connect(function()
+    local valor = tonumber(skillDMGDelayInput.Text)
+    if valor then
+        SKILL_DMG_DELAY = math.clamp(valor, 0.001, 5)
+        skillDMGDelayInput.Text = string.format("%.3f", SKILL_DMG_DELAY)
+    else
+        skillDMGDelayInput.Text = string.format("%.3f", SKILL_DMG_DELAY)
+    end
+end)
 
 -- === ABA AURA ===
 local haloInfo = Instance.new("TextLabel")
@@ -723,30 +739,38 @@ exchangeSliderLabel.BackgroundTransparency = 1
 exchangeSliderLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
 exchangeSliderLabel.TextSize = 11
 exchangeSliderLabel.Font = Enum.Font.GothamBold
-exchangeSliderLabel.Text = string.format("Delay: %.2fs", EXCHANGE_HALO_DELAY)
+exchangeSliderLabel.Text = "Delay (segundos):"
 exchangeSliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+exchangeSliderLabel.ZIndex = 100003
 exchangeSliderLabel.Parent = auraContainer
 
-local exchangeSliderBar = Instance.new("Frame")
-exchangeSliderBar.Size = UDim2.new(0, 340, 0, 8)
-exchangeSliderBar.Position = UDim2.new(0, 10, 0, 275)
-exchangeSliderBar.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-exchangeSliderBar.BorderSizePixel = 0
-exchangeSliderBar.Parent = auraContainer
+local exchangeDelayInput = Instance.new("TextBox")
+exchangeDelayInput.Size = UDim2.new(0, 340, 0, 25)
+exchangeDelayInput.Position = UDim2.new(0, 10, 0, 270)
+exchangeDelayInput.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+exchangeDelayInput.TextColor3 = Color3.new(1, 1, 1)
+exchangeDelayInput.PlaceholderText = "0.01 a 0.51"
+exchangeDelayInput.Text = string.format("%.2f", EXCHANGE_HALO_DELAY)
+exchangeDelayInput.TextSize = 13
+exchangeDelayInput.Font = Enum.Font.Gotham
+exchangeDelayInput.ClearTextOnFocus = false
+exchangeDelayInput.BorderSizePixel = 0
+exchangeDelayInput.ZIndex = 100003
+exchangeDelayInput.Parent = auraContainer
 
-local exchangeSliderCorner = Instance.new("UICorner")
-exchangeSliderCorner.CornerRadius = UDim.new(1, 0)
-exchangeSliderCorner.Parent = exchangeSliderBar
+local exchangeInputCorner = Instance.new("UICorner")
+exchangeInputCorner.CornerRadius = UDim.new(0, 8)
+exchangeInputCorner.Parent = exchangeDelayInput
 
-local exchangeSliderFill = Instance.new("Frame")
-exchangeSliderFill.Size = UDim2.new(EXCHANGE_HALO_DELAY/0.5, 0, 1, 0)
-exchangeSliderFill.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-exchangeSliderFill.BorderSizePixel = 0
-exchangeSliderFill.Parent = exchangeSliderBar
-
-local exchangeSliderFillCorner = Instance.new("UICorner")
-exchangeSliderFillCorner.CornerRadius = UDim.new(1, 0)
-exchangeSliderFillCorner.Parent = exchangeSliderFill
+exchangeDelayInput.FocusLost:Connect(function()
+    local valor = tonumber(exchangeDelayInput.Text)
+    if valor then
+        EXCHANGE_HALO_DELAY = math.clamp(valor, 0.01, 0.51)
+        exchangeDelayInput.Text = string.format("%.2f", EXCHANGE_HALO_DELAY)
+    else
+        exchangeDelayInput.Text = string.format("%.2f", EXCHANGE_HALO_DELAY)
+    end
+end)
 
 -- === ABA TALISMÃ ===
 local talismaInfo = Instance.new("TextLabel")
@@ -829,7 +853,7 @@ local function autoClick()
             local args = {{}}
             clickRemote:FireServer(unpack(args))
         end)
-        task.wait(0.001)
+        task.wait(0.01)
     end
 end
 
@@ -849,7 +873,7 @@ local function autoOpenBaus()
             pcall(function()
                 openBoxRemote:FireServer(bauID)
             end)
-            task.wait(0.001)
+            task.wait(0.01)
         end
     end
 end
@@ -924,7 +948,7 @@ local function autoExchangeHalo()
             }}
             exchangeHaloRemote:InvokeServer(unpack(args))
         end)
-        task.wait(0.001)
+        task.wait(EXCHANGE_HALO_DELAY)
     end
 end
 
@@ -933,7 +957,7 @@ local function autoReroll()
         pcall(function()
             rerollRemote:InvokeServer(ORNAMENT_ID)
         end)
-        task.wait(0.000001)
+        task.wait(DELAY_REROLL)
     end
 end
 
