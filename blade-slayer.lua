@@ -237,57 +237,33 @@ screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 999999
 screenGui.Parent = playerGui
 
--- BOTÃO FLUTUANTE (SOMENTE IMAGEM)
-local floatingButton = Instance.new("ImageButton")
-floatingButton.Size = UDim2.new(0, 70, 0, 70)
-floatingButton.Position = UDim2.new(0, 20, 0.5, -35)
-floatingButton.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-floatingButton.BackgroundTransparency = 0.3
-floatingButton.Image = "rbxassetid://16177915618"
-floatingButton.ImageTransparency = 0
-floatingButton.ScaleType = Enum.ScaleType.Fit
+-- BOTÃO FLUTUANTE CLEAN
+local floatingButton = Instance.new("TextButton")
+floatingButton.Size = UDim2.new(0, 60, 0, 60)
+floatingButton.Position = UDim2.new(0, 20, 0.5, -30)
+floatingButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 floatingButton.BorderSizePixel = 0
 floatingButton.ZIndex = 99999
 floatingButton.Active = true
+floatingButton.AutoButtonColor = false
+floatingButton.Text = ""
 floatingButton.Parent = screenGui
 
 local floatingCorner = Instance.new("UICorner")
-floatingCorner.CornerRadius = UDim.new(0.5, 0)
+floatingCorner.CornerRadius = UDim.new(0.25, 0)
 floatingCorner.Parent = floatingButton
 
--- Texto de fallback caso a imagem não carregue
-local floatingFallback = Instance.new("TextLabel")
-floatingFallback.Size = UDim2.new(1, 0, 1, 0)
-floatingFallback.BackgroundTransparency = 1
-floatingFallback.Text = "🥀"
-floatingFallback.TextColor3 = Color3.new(1, 1, 1)
-floatingFallback.TextSize = 35
-floatingFallback.Font = Enum.Font.GothamBold
-floatingFallback.ZIndex = 99998
-floatingFallback.Parent = floatingButton
+-- Ícone
+local floatingIcon = Instance.new("TextLabel")
+floatingIcon.Size = UDim2.new(1, 0, 1, 0)
+floatingIcon.BackgroundTransparency = 1
+floatingIcon.Text = "🥀"
+floatingIcon.TextColor3 = Color3.new(1, 1, 1)
+floatingIcon.TextSize = 30
+floatingIcon.Font = Enum.Font.GothamBold
+floatingIcon.ZIndex = 100000
+floatingIcon.Parent = floatingButton
 
--- Animação de pulso na imagem
---[[task.spawn(function()
-    while true do
-        floatingButton:TweenSize(
-            UDim2.new(0, 75, 0, 75),
-            Enum.EasingDirection.InOut,
-            Enum.EasingStyle.Sine,
-            0.8,
-            true
-        )
-        task.wait(0.8)
-        floatingButton:TweenSize(
-            UDim2.new(0, 70, 0, 70),
-            Enum.EasingDirection.InOut,
-            Enum.EasingStyle.Sine,
-            0.8,
-            true
-        )
-        task.wait(0.8)
-    end
-end)
-]]
 -- Arrastar botão flutuante
 local floatDragging = false
 local floatDragInput, floatDragStart, floatStartPos
@@ -853,7 +829,7 @@ local function autoClick()
             local args = {{}}
             clickRemote:FireServer(unpack(args))
         end)
-        task.wait(0.01)
+        task.wait(0.001)
     end
 end
 
@@ -873,7 +849,7 @@ local function autoOpenBaus()
             pcall(function()
                 openBoxRemote:FireServer(bauID)
             end)
-            task.wait(0.01)
+            task.wait(0.001)
         end
     end
 end
@@ -948,7 +924,7 @@ local function autoExchangeHalo()
             }}
             exchangeHaloRemote:InvokeServer(unpack(args))
         end)
-        task.wait(EXCHANGE_HALO_DELAY)
+        task.wait(0.001)
     end
 end
 
@@ -957,7 +933,7 @@ local function autoReroll()
         pcall(function()
             rerollRemote:InvokeServer(ORNAMENT_ID)
         end)
-        task.wait(DELAY_REROLL)
+        task.wait(0.000001)
     end
 end
 
