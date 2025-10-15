@@ -17,6 +17,7 @@ local clickRemote = ReplicatedStorage.Remotes.PlayerClickAttack
 local rebornRemote = ReplicatedStorage.Remotes.PlayerReborn
 local openBoxRemote = ReplicatedStorage.Remotes.OpenAntiqueBox
 local respirationSkillRemote = ReplicatedStorage.Remotes.RespirationSkillHarm
+local heroSkillRemote = ReplicatedStorage.Remotes.HeroSkillHarm
 local rerollHaloRemote = ReplicatedStorage.Remotes.RerollHalo
 local exchangeHaloRemote = ReplicatedStorage.Remotes.ExchangeHaloDrawItem
 local useOrnamentRemote = ReplicatedStorage.Remotes.UseOrnament
@@ -29,15 +30,41 @@ local AUTO_CLICK_ATIVO = false
 local AUTO_REBORN_ATIVO = false
 local AUTO_OPEN_ATIVO = false
 local AUTO_RESPIRATION_SKILL_ATIVO = false
+local AUTO_SKILL_DMG_ATIVO = false
 local AUTO_HALO_BRONZE_ATIVO = false
 local AUTO_HALO_OURO_ATIVO = false
 local AUTO_HALO_DIAMANTE_ATIVO = false
 local AUTO_EXCHANGE_HALO_ATIVO = false
 local RESPIRATION_SKILL_DELAY = 0.05
+local SKILL_DMG_DELAY = 0.5
 local HALO_DELAY = 0.001
 local EXCHANGE_HALO_DELAY = 0.01
 local KEYS_VALIDAS = { "luh", "fifa" }
 local ABA_ATUAL = "Farm"
+
+-- Lista de heróis para SkillDMG
+local skillDMGHeroes = {
+    "acfaa58a-4c18-4252-8131-e2430c93ad2d",
+    "b8481640-e554-4df7-8b4e-d54fb530b918",
+    "b1da51b2-a07a-45f7-ab81-fd1cf1368109",
+    "d05319b1-a867-4b4a-94c9-14ddabc0abd4",
+    "eef29e5d-d2cf-426a-ac7c-f2c205c84d4d",
+    "b01ae2c8-ac0e-4712-bd76-c56e3072d109",
+    "843e63fc-3d92-4f66-bbe4-590b29331e62",
+    "c263c87e-04e2-41f9-9393-471e08c68fdb",
+    "2a63850e-8aa7-47a4-ad0b-ef6a9f5659b1",
+    "0f0c317c-320d-4533-b94d-fee7059488cd",
+    "b88fd791-06ad-4e1e-964a-f6e67cafcb1a",
+    "200362e0-9581-4699-875c-35193486ce4c",
+    "6a87918b-0a7f-4241-abb9-287cf8b1a095",
+    "e2c0a234-efd6-4331-a1a3-7d6d47a0b52a",
+    "31c1e490-e22a-40cb-b644-47e13cea3c40",
+    "12192dfe-97c5-439b-b271-fa9fc28e3b56",
+    "f69689dd-85f5-4c8d-9cc9-3734109eadef",
+    "b6cf37e3-609b-4ed3-92e0-0e250ee1502e",
+    "c4cfa56d-f873-4c3a-851a-650b3477dbf3",
+    "25a13523-7985-4ea8-9ec7-6c619a378b8d"
+}
 
 -- Ornamentos Config
 local ORNAMENTS = {
@@ -210,41 +237,40 @@ screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 999999
 screenGui.Parent = playerGui
 
--- BOTÃO FLUTUANTE (SEMPRE VISÍVEL)
+-- BOTÃO FLUTUANTE (SOMENTE IMAGEM)
 local floatingButton = Instance.new("ImageButton")
-floatingButton.Size = UDim2.new(0, 60, 0, 60)
-floatingButton.Position = UDim2.new(0, 20, 0.5, -30)
+floatingButton.Size = UDim2.new(0, 70, 0, 70)
+floatingButton.Position = UDim2.new(0, 20, 0.5, -35)
 floatingButton.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+floatingButton.BackgroundTransparency = 0.3
+floatingButton.Image = "rbxassetid://16177915618"
+floatingButton.ImageTransparency = 0
+floatingButton.ScaleType = Enum.ScaleType.Fit
 floatingButton.BorderSizePixel = 0
 floatingButton.ZIndex = 99999
-floatingButton.Active = false
+floatingButton.Active = true
 floatingButton.Parent = screenGui
 
 local floatingCorner = Instance.new("UICorner")
-floatingCorner.CornerRadius = UDim.new(1, 0)
+floatingCorner.CornerRadius = UDim.new(0.5, 0)
 floatingCorner.Parent = floatingButton
 
-local floatingStroke = Instance.new("UIStroke")
-floatingStroke.Color = Color3.fromRGB(120, 180, 255)
-floatingStroke.Thickness = 3
-floatingStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-floatingStroke.Parent = floatingButton
+-- Texto de fallback caso a imagem não carregue
+local floatingFallback = Instance.new("TextLabel")
+floatingFallback.Size = UDim2.new(1, 0, 1, 0)
+floatingFallback.BackgroundTransparency = 1
+floatingFallback.Text = "✦"
+floatingFallback.TextColor3 = Color3.new(1, 1, 1)
+floatingFallback.TextSize = 35
+floatingFallback.Font = Enum.Font.GothamBold
+floatingFallback.ZIndex = 99998
+floatingFallback.Parent = floatingButton
 
-local floatingIcon = Instance.new("TextLabel")
-floatingIcon.Size = UDim2.new(1, 0, 1, 0)
-floatingIcon.BackgroundTransparency = 1
-floatingIcon.Text = "💙"
-floatingIcon.TextColor3 = Color3.new(1, 1, 1)
-floatingIcon.TextSize = 30
-floatingIcon.Font = Enum.Font.GothamBold
-floatingIcon.ZIndex = 99999
-floatingIcon.Parent = floatingButton
-
--- Animação de pulso
+-- Animação de pulso na imagem
 --[[task.spawn(function()
     while true do
         floatingButton:TweenSize(
-            UDim2.new(0, 65, 0, 65),
+            UDim2.new(0, 75, 0, 75),
             Enum.EasingDirection.InOut,
             Enum.EasingStyle.Sine,
             0.8,
@@ -252,7 +278,7 @@ floatingIcon.Parent = floatingButton
         )
         task.wait(0.8)
         floatingButton:TweenSize(
-            UDim2.new(0, 60, 0, 60),
+            UDim2.new(0, 70, 0, 70),
             Enum.EasingDirection.InOut,
             Enum.EasingStyle.Sine,
             0.8,
@@ -262,7 +288,6 @@ floatingIcon.Parent = floatingButton
     end
 end)
 ]]
-
 -- Arrastar botão flutuante
 local floatDragging = false
 local floatDragInput, floatDragStart, floatStartPos
@@ -339,7 +364,7 @@ title.BackgroundTransparency = 1
 title.TextColor3 = Color3.fromRGB(120, 180, 255)
 title.TextSize = 22
 title.Font = Enum.Font.GothamBold
-title.Text = "🥀 DiuaryOG Hub"
+title.Text = "🥀 Diuary Hub"
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.ZIndex = 100002
 title.Parent = header
@@ -625,6 +650,7 @@ foundCorner.Parent = foundLabel
 
 -- === ABA SKILLS ===
 local respirationSkillButton, respirationSkillStatus = createButton("☠️ RespirationSkill", skillsContainer, 10)
+local skillDMGButton, skillDMGStatus = createButton("⚔️ SkillDMG", skillsContainer, 110)
 
 -- Slider RespirationSkill
 local respirationSliderLabel = Instance.new("TextLabel")
@@ -658,6 +684,39 @@ respirationSliderFill.Parent = respirationSliderBar
 local respirationSliderFillCorner = Instance.new("UICorner")
 respirationSliderFillCorner.CornerRadius = UDim.new(1, 0)
 respirationSliderFillCorner.Parent = respirationSliderFill
+
+-- Slider SkillDMG
+local skillDMGSliderLabel = Instance.new("TextLabel")
+skillDMGSliderLabel.Size = UDim2.new(0, 340, 0, 20)
+skillDMGSliderLabel.Position = UDim2.new(0, 10, 0, 160)
+skillDMGSliderLabel.BackgroundTransparency = 1
+skillDMGSliderLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
+skillDMGSliderLabel.TextSize = 11
+skillDMGSliderLabel.Font = Enum.Font.GothamBold
+skillDMGSliderLabel.Text = string.format("Delay: %.2fs", SKILL_DMG_DELAY)
+skillDMGSliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+skillDMGSliderLabel.Parent = skillsContainer
+
+local skillDMGSliderBar = Instance.new("Frame")
+skillDMGSliderBar.Size = UDim2.new(0, 340, 0, 8)
+skillDMGSliderBar.Position = UDim2.new(0, 10, 0, 185)
+skillDMGSliderBar.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+skillDMGSliderBar.BorderSizePixel = 0
+skillDMGSliderBar.Parent = skillsContainer
+
+local skillDMGSliderCorner = Instance.new("UICorner")
+skillDMGSliderCorner.CornerRadius = UDim.new(1, 0)
+skillDMGSliderCorner.Parent = skillDMGSliderBar
+
+local skillDMGSliderFill = Instance.new("Frame")
+skillDMGSliderFill.Size = UDim2.new(SKILL_DMG_DELAY/5, 0, 1, 0)
+skillDMGSliderFill.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+skillDMGSliderFill.BorderSizePixel = 0
+skillDMGSliderFill.Parent = skillDMGSliderBar
+
+local skillDMGSliderFillCorner = Instance.new("UICorner")
+skillDMGSliderFillCorner.CornerRadius = UDim.new(1, 0)
+skillDMGSliderFillCorner.Parent = skillDMGSliderFill
 
 -- === ABA AURA ===
 local haloInfo = Instance.new("TextLabel")
@@ -794,7 +853,7 @@ local function autoClick()
             local args = {{}}
             clickRemote:FireServer(unpack(args))
         end)
-        task.wait(0.001)
+        task.wait(0.01)
     end
 end
 
@@ -814,7 +873,7 @@ local function autoOpenBaus()
             pcall(function()
                 openBoxRemote:FireServer(bauID)
             end)
-            task.wait(0.001)
+            task.wait(0.01)
         end
     end
 end
@@ -836,12 +895,29 @@ local function autoRespirationSkill()
     end
 end
 
+local function autoSkillDMG()
+    while AUTO_SKILL_DMG_ATIVO do
+        for _, heroGuid in ipairs(skillDMGHeroes) do
+            local args = {{
+                harmIndex = 15,
+                isSkill = true,
+                heroGuid = heroGuid,
+                skillId = 200616
+            }}
+            pcall(function()
+                heroSkillRemote:FireServer(unpack(args))
+            end)
+        end
+        task.wait(SKILL_DMG_DELAY)
+    end
+end
+
 local function autoHaloBronze()
     while AUTO_HALO_BRONZE_ATIVO do
         pcall(function()
             rerollHaloRemote:InvokeServer(1)
         end)
-        task.wait(0.001)
+        task.wait(HALO_DELAY)
     end
 end
 
@@ -850,7 +926,7 @@ local function autoHaloOuro()
         pcall(function()
             rerollHaloRemote:InvokeServer(2)
         end)
-        task.wait(0.001)
+        task.wait(HALO_DELAY)
     end
 end
 
@@ -881,7 +957,7 @@ local function autoReroll()
         pcall(function()
             rerollRemote:InvokeServer(ORNAMENT_ID)
         end)
-        task.wait(0.001)
+        task.wait(DELAY_REROLL)
     end
 end
 
@@ -927,6 +1003,13 @@ respirationSkillButton.MouseButton1Click:Connect(function()
     respirationSkillStatus.Text = AUTO_RESPIRATION_SKILL_ATIVO and "ON" or "OFF"
     respirationSkillStatus.BackgroundColor3 = AUTO_RESPIRATION_SKILL_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
     if AUTO_RESPIRATION_SKILL_ATIVO then task.spawn(autoRespirationSkill) end
+end)
+
+skillDMGButton.MouseButton1Click:Connect(function()
+    AUTO_SKILL_DMG_ATIVO = not AUTO_SKILL_DMG_ATIVO
+    skillDMGStatus.Text = AUTO_SKILL_DMG_ATIVO and "ON" or "OFF"
+    skillDMGStatus.BackgroundColor3 = AUTO_SKILL_DMG_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    if AUTO_SKILL_DMG_ATIVO then task.spawn(autoSkillDMG) end
 end)
 
 -- TOGGLES ABA AURA
@@ -1007,6 +1090,7 @@ end)
 
 -- SLIDERS
 local respirationDragging = false
+local skillDMGDragging = false
 local exchangeDragging = false
 
 local function updateRespirationSlider(input)
@@ -1014,6 +1098,13 @@ local function updateRespirationSlider(input)
     RESPIRATION_SKILL_DELAY = math.clamp((relativeX / respirationSliderBar.AbsoluteSize.X) * 5, 0.01, 5)
     respirationSliderFill.Size = UDim2.new(relativeX / respirationSliderBar.AbsoluteSize.X, 0, 1, 0)
     respirationSliderLabel.Text = string.format("Delay: %.2fs", RESPIRATION_SKILL_DELAY)
+end
+
+local function updateSkillDMGSlider(input)
+    local relativeX = math.clamp(input.Position.X - skillDMGSliderBar.AbsolutePosition.X, 0, skillDMGSliderBar.AbsoluteSize.X)
+    SKILL_DMG_DELAY = math.clamp((relativeX / skillDMGSliderBar.AbsoluteSize.X) * 5, 0.001, 5)
+    skillDMGSliderFill.Size = UDim2.new(relativeX / skillDMGSliderBar.AbsoluteSize.X, 0, 1, 0)
+    skillDMGSliderLabel.Text = string.format("Delay: %.3fs", SKILL_DMG_DELAY)
 end
 
 local function updateExchangeSlider(input)
@@ -1036,6 +1127,19 @@ respirationSliderBar.InputEnded:Connect(function(input)
     end
 end)
 
+skillDMGSliderBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        skillDMGDragging = true
+        updateSkillDMGSlider(input)
+    end
+end)
+
+skillDMGSliderBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        skillDMGDragging = false
+    end
+end)
+
 exchangeSliderBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         exchangeDragging = true
@@ -1052,6 +1156,9 @@ end)
 UserInputService.InputChanged:Connect(function(input)
     if respirationDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         pcall(function() updateRespirationSlider(input) end)
+    end
+    if skillDMGDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        pcall(function() updateSkillDMGSlider(input) end)
     end
     if exchangeDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         pcall(function() updateExchangeSlider(input) end)
