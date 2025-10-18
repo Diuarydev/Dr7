@@ -735,7 +735,7 @@ local function autoClick()
         pcall(function()
             if clickRemote then clickRemote:FireServer({}) end
         end)
-        task.wait(0.01)
+        task.wait(0.0001)
     end
     setFlag("autoClick", false)
 end
@@ -759,7 +759,7 @@ local function autoOpenBaus()
     while AUTO_OPEN_ATIVO do
         for _, id in ipairs(baus) do
             pcall(function() if openBoxRemote then openBoxRemote:FireServer(id) end end)
-            task.wait(0.01)
+            task.wait(0.001)
         end
     end
     setFlag("autoOpen", false)
