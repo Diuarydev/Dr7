@@ -1,95 +1,74 @@
--- HUB DIUARYOG PROFISSIONAL COM ABAS v3.2 (Full DMG substituído)
+-- HUB DIUARYOG PROFISSIONAL COM ABAS v3.2 (com todas as funções integradas)
 -- By DiuaryOG 💙
--- Atualizado: removidas implementações antigas de "DMG", substituídas pela versão fornecida (Full DMG)
--- Observação: Rode como LocalScript em PlayerGui. Hook depende do ambiente/executor.
+-- Coloque como LocalScript dentro de PlayerGui (StarterGui -> PlayerGui).
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
 
--- Aguardar Remotes
-wait(2)
+-- Espera remotes
+local remotes = ReplicatedStorage:WaitForChild("Remotes")
 
 -- Remotes
-local remotes = ReplicatedStorage:WaitForChild("Remotes")
-local rerollRemote = remotes:WaitForChild("RerollOrnament")
-local clickRemote = remotes:WaitForChild("PlayerClickAttack")
-local rebornRemote = remotes:WaitForChild("PlayerReborn")
-local openBoxRemote = remotes:WaitForChild("OpenAntiqueBox")
-local respirationSkillRemote = remotes:WaitForChild("RespirationSkillHarm")
-local rerollHaloRemote = remotes:WaitForChild("RerollHalo")
-local exchangeHaloRemote = remotes:WaitForChild("ExchangeHaloDrawItem")
-local useOrnamentRemote = remotes:WaitForChild("UseOrnament")
-local heroSkillRemote = remotes:WaitForChild("HeroSkillHarm") -- conforme solicitado
+local rerollRemote = remotes:FindFirstChild("RerollOrnament")
+local clickRemote = remotes:FindFirstChild("PlayerClickAttack")
+local rebornRemote = remotes:FindFirstChild("PlayerReborn")
+local openBoxRemote = remotes:FindFirstChild("OpenAntiqueBox")
+local respirationSkillRemote = remotes:FindFirstChild("RespirationSkillHarm")
+local rerollHaloRemote = remotes:FindFirstChild("RerollHalo")
+local exchangeHaloRemote = remotes:FindFirstChild("ExchangeHaloDrawItem")
+local useOrnamentRemote = remotes:FindFirstChild("UseOrnament")
+local heroSkillRemote = remotes:FindFirstChild("HeroSkillHarm")
 
 -- CONFIG
 local ORNAMENT_ID = 400002
 local DELAY_REROLL = 0.1
-local AUTO_REROLL_ATIVO = false
-local AUTO_CLICK_ATIVO = false
-local AUTO_REBORN_ATIVO = false
-local AUTO_OPEN_ATIVO = false
-local AUTO_RESPIRATION_SKILL_ATIVO = false
-local AUTO_HALO_BRONZE_ATIVO = false
-local AUTO_HALO_OURO_ATIVO = false
-local AUTO_HALO_DIAMANTE_ATIVO = false
-local AUTO_EXCHANGE_HALO_ATIVO = false
 local RESPIRATION_SKILL_DELAY = 0.05
 local HALO_DELAY = 0.001
 local EXCHANGE_HALO_DELAY = 0.01
 local KEYS_VALIDAS = { "luh", "fifa" }
-local ABA_ATUAL = "Farm"
 
 -- Ornamentos Config
 local ORNAMENTS = {
-    DMG = { ornamentId = 410028, machineId = 400005, selected = false },
-    Power = { ornamentId = 410026, machineId = 400005, selected = false },
-    Lucky = { ornamentId = 410025, machineId = 400005, selected = false }
-}
-local ornamentSelecionado = nil
-
--- FLAGS PARA EVITAR MULTIPLOS SPAWNS
-local taskRunningFlags = {
-    autoClick = false,
-    autoReborn = false,
-    autoOpen = false,
-    autoRespiration = false,
-    autoHaloBronze = false,
-    autoHaloOuro = false,
-    autoHaloDiamante = false,
-    autoExchangeHalo = false,
-    autoReroll = false,
-    autoFullDmg = false
+    DMG = { ornamentId = 410028, machineId = 400005 },
+    Power = { ornamentId = 410026, machineId = 400005 },
+    Lucky = { ornamentId = 410025, machineId = 400005 }
 }
 
--- SISTEMA DE KEY
+-- FLAGS E ESTADOS GLOBAIS
+local ABA_ATUAL = "Farm"
+local taskRunningFlags = {}
+local function setFlag(name, v) taskRunningFlags[name] = v end
+local function getFlag(name) return taskRunningFlags[name] end
+
+-- Full DMG (detecção)
+local detectedHeroes = {} -- shared cache for Full DMG detection
+
+-- Função utilitária: safe wait
+local function safeWait(t)
+    task.wait(t or 0.01)
+end
+
+-- SISTEMA DE KEY (cliente-side)
 local function verificarKey()
     local playerGui = LocalPlayer:WaitForChild("PlayerGui")
     local ScreenGui = Instance.new("ScreenGui")
-    local Frame = Instance.new("Frame")
-    local UICorner = Instance.new("UICorner")
-    local Title = Instance.new("TextLabel")
-    local TextBox = Instance.new("TextBox")
-    local TextCorner = Instance.new("UICorner")
-    local ConfirmButton = Instance.new("TextButton")
-    local BtnCorner = Instance.new("UICorner")
-    local StatusLabel = Instance.new("TextLabel")
-
     ScreenGui.Name = "KeySystemGui"
-    ScreenGui.Parent = playerGui
     ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = playerGui
 
+    local Frame = Instance.new("Frame", ScreenGui)
     Frame.Size = UDim2.new(0, 350, 0, 200)
     Frame.Position = UDim2.new(0.5, -175, 0.5, -100)
     Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     Frame.BorderSizePixel = 0
-    Frame.Parent = ScreenGui
 
+    local UICorner = Instance.new("UICorner", Frame)
     UICorner.CornerRadius = UDim.new(0, 12)
-    UICorner.Parent = Frame
 
+    local Title = Instance.new("TextLabel", Frame)
     Title.Size = UDim2.new(1, -20, 0, 40)
     Title.Position = UDim2.new(0, 10, 0, 10)
     Title.BackgroundTransparency = 1
@@ -97,8 +76,8 @@ local function verificarKey()
     Title.TextColor3 = Color3.fromRGB(120, 180, 255)
     Title.TextSize = 18
     Title.Font = Enum.Font.GothamBold
-    Title.Parent = Frame
 
+    local TextBox = Instance.new("TextBox", Frame)
     TextBox.Size = UDim2.new(0, 300, 0, 40)
     TextBox.Position = UDim2.new(0.5, -150, 0, 60)
     TextBox.PlaceholderText = "Digite sua key aqui..."
@@ -106,12 +85,8 @@ local function verificarKey()
     TextBox.TextColor3 = Color3.new(1, 1, 1)
     TextBox.TextSize = 14
     TextBox.Font = Enum.Font.Gotham
-    TextBox.BorderSizePixel = 0
-    TextBox.Parent = Frame
 
-    TextCorner.CornerRadius = UDim.new(0, 8)
-    TextCorner.Parent = TextBox
-
+    local ConfirmButton = Instance.new("TextButton", Frame)
     ConfirmButton.Size = UDim2.new(0, 300, 0, 40)
     ConfirmButton.Position = UDim2.new(0.5, -150, 0, 110)
     ConfirmButton.Text = "VERIFICAR"
@@ -120,11 +95,8 @@ local function verificarKey()
     ConfirmButton.TextSize = 16
     ConfirmButton.Font = Enum.Font.GothamBold
     ConfirmButton.BorderSizePixel = 0
-    ConfirmButton.Parent = Frame
 
-    BtnCorner.CornerRadius = UDim.new(0, 8)
-    BtnCorner.Parent = ConfirmButton
-
+    local StatusLabel = Instance.new("TextLabel", Frame)
     StatusLabel.Size = UDim2.new(1, -20, 0, 20)
     StatusLabel.Position = UDim2.new(0, 10, 0, 165)
     StatusLabel.BackgroundTransparency = 1
@@ -132,7 +104,6 @@ local function verificarKey()
     StatusLabel.TextSize = 12
     StatusLabel.Font = Enum.Font.Gotham
     StatusLabel.Text = ""
-    StatusLabel.Parent = Frame
 
     local keyValida = false
     ConfirmButton.MouseButton1Click:Connect(function()
@@ -171,321 +142,252 @@ screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 999999
 screenGui.Parent = playerGui
 
--- BOTÃO FLUTUANTE CLEAN
-local floatingButton = Instance.new("TextButton")
+-- Floating button
+local floatingButton = Instance.new("TextButton", screenGui)
 floatingButton.Size = UDim2.new(0, 60, 0, 60)
 floatingButton.Position = UDim2.new(0, 20, 0.5, -30)
-floatingButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+floatingButton.BackgroundColor3 = Color3.fromRGB(45,45,55)
 floatingButton.BorderSizePixel = 0
-floatingButton.ZIndex = 99999
-floatingButton.Active = true
-floatingButton.AutoButtonColor = false
 floatingButton.Text = ""
-floatingButton.Parent = screenGui
+floatingButton.AutoButtonColor = false
+floatingButton.ZIndex = 99999
 
-local floatingCorner = Instance.new("UICorner")
-floatingCorner.CornerRadius = UDim.new(0.25, 0)
-floatingCorner.Parent = floatingButton
+local floatingCorner = Instance.new("UICorner", floatingButton)
+floatingCorner.CornerRadius = UDim.new(0.25,0)
 
--- Ícone
-local floatingIcon = Instance.new("TextLabel")
-floatingIcon.Size = UDim2.new(1, 0, 1, 0)
+local floatingIcon = Instance.new("TextLabel", floatingButton)
+floatingIcon.Size = UDim2.new(1,0,1,0)
 floatingIcon.BackgroundTransparency = 1
 floatingIcon.Text = "🥀"
-floatingIcon.TextColor3 = Color3.new(1, 1, 1)
+floatingIcon.TextColor3 = Color3.new(1,1,1)
 floatingIcon.TextSize = 30
 floatingIcon.Font = Enum.Font.GothamBold
-floatingIcon.ZIndex = 100000
-floatingIcon.Parent = floatingButton
 
--- Arrastar botão flutuante
-local floatDragging = false
-local floatDragInput, floatDragStart, floatStartPos
-
-floatingButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        floatDragging = true
-        floatDragStart = input.Position
-        floatStartPos = floatingButton.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                floatDragging = false
-            end
-        end)
-    end
-end)
-
-floatingButton.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        floatDragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if floatDragging and input == floatDragInput then
-        local delta = input.Position - floatDragStart
-        floatingButton.Position = UDim2.new(
-            floatStartPos.X.Scale,
-            floatStartPos.X.Offset + delta.X,
-            floatStartPos.Y.Scale,
-            floatStartPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
--- FRAME PRINCIPAL
-local hubFrame = Instance.new("Frame")
-hubFrame.Size = UDim2.new(0, 500, 0, 400)
-hubFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
-hubFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-hubFrame.BorderSizePixel = 0
-hubFrame.Active = true
-hubFrame.Visible = false
-hubFrame.ZIndex = 100000
-hubFrame.Parent = screenGui
-
-local hubCorner = Instance.new("UICorner")
-hubCorner.CornerRadius = UDim.new(0, 15)
-hubCorner.Parent = hubFrame
-
-local hubStroke = Instance.new("UIStroke")
-hubStroke.Color = Color3.fromRGB(60, 60, 80)
-hubStroke.Thickness = 1
-hubStroke.Transparency = 0.7
-hubStroke.Parent = hubFrame
-
--- HEADER
-local header = Instance.new("Frame")
-header.Size = UDim2.new(1, 0, 0, 50)
-header.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-header.BorderSizePixel = 0
-header.ZIndex = 100001
-header.Parent = hubFrame
-
-local headerCorner = Instance.new("UICorner")
-headerCorner.CornerRadius = UDim.new(0, 15)
-headerCorner.Parent = header
-
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(0, 250, 0, 35)
-title.Position = UDim2.new(0, 20, 0, 7)
-title.BackgroundTransparency = 1
-title.TextColor3 = Color3.fromRGB(120, 180, 255)
-title.TextSize = 22
-title.Font = Enum.Font.GothamBold
-title.Text = "🥀 Diuary Hub"
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.ZIndex = 100002
-title.Parent = header
-
-local version = Instance.new("TextLabel")
-version.Size = UDim2.new(0, 60, 0, 15)
-version.Position = UDim2.new(0, 20, 0, 32)
-version.BackgroundTransparency = 1
-version.TextColor3 = Color3.fromRGB(100, 100, 120)
-version.TextSize = 10
-version.Font = Enum.Font.Gotham
-version.Text = "vivian"
-version.TextXAlignment = Enum.TextXAlignment.Left
-version.ZIndex = 100002
-version.Parent = header
-
--- BOTÃO FECHAR (X)
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 40, 0, 40)
-closeBtn.Position = UDim2.new(1, -50, 0, 5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-closeBtn.Text = "✕"
-closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.TextSize = 20
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.BorderSizePixel = 0
-closeBtn.AutoButtonColor = false
-closeBtn.ZIndex = 100002
-closeBtn.Parent = header
-
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 10)
-closeCorner.Parent = closeBtn
-
--- SIDEBAR (MENU LATERAL)
-local sidebar = Instance.new("Frame")
-sidebar.Size = UDim2.new(0, 120, 1, -50)
-sidebar.Position = UDim2.new(0, 0, 0, 50)
-sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-sidebar.BorderSizePixel = 0
-sidebar.ZIndex = 100001
-sidebar.Parent = hubFrame
-
--- CONTENT AREA
-local contentArea = Instance.new("Frame")
-contentArea.Size = UDim2.new(1, -130, 1, -60)
-contentArea.Position = UDim2.new(0, 130, 0, 60)
-contentArea.BackgroundTransparency = 1
-contentArea.ZIndex = 100001
-contentArea.Parent = hubFrame
-
--- ARRASTAR (PC E MOBILE)
-local dragging = false
-local dragInput, dragStart, startPos
-
-local function updateInput(input)
-    local delta = input.Position - dragStart
-    hubFrame.Position = UDim2.new(
-        startPos.X.Scale,
-        startPos.X.Offset + delta.X,
-        startPos.Y.Scale,
-        startPos.Y.Offset + delta.Y
-    )
+-- Drag floating
+do
+    local dragging = false
+    local dragInput, dragStart, startPos
+    floatingButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = floatingButton.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    floatingButton.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position - dragStart
+            floatingButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
 end
 
-header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = hubFrame.Position
+-- Main hub frame
+local hubFrame = Instance.new("Frame", screenGui)
+hubFrame.Size = UDim2.new(0, 500, 0, 400)
+hubFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+hubFrame.BackgroundColor3 = Color3.fromRGB(20,20,25)
+hubFrame.BorderSizePixel = 0
+hubFrame.Visible = false
+hubFrame.ZIndex = 100000
 
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
+local hubCorner = Instance.new("UICorner", hubFrame)
+hubCorner.CornerRadius = UDim.new(0,15)
 
-header.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
+local hubStroke = Instance.new("UIStroke", hubFrame)
+hubStroke.Color = Color3.fromRGB(60,60,80)
+hubStroke.Thickness = 1
+hubStroke.Transparency = 0.7
 
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
-        updateInput(input)
-    end
-end)
+-- Header
+local header = Instance.new("Frame", hubFrame)
+header.Size = UDim2.new(1,0,0,50)
+header.Position = UDim2.new(0,0,0,0)
+header.BackgroundColor3 = Color3.fromRGB(25,25,35)
+header.BorderSizePixel = 0
 
--- MINIMIZAR
+local headerCorner = Instance.new("UICorner", header)
+headerCorner.CornerRadius = UDim.new(0,15)
+
+local title = Instance.new("TextLabel", header)
+title.Size = UDim2.new(0,250,0,35)
+title.Position = UDim2.new(0,20,0,7)
+title.BackgroundTransparency = 1
+title.Text = "✦ DiuaryOG Hub"
+title.TextColor3 = Color3.fromRGB(120,180,255)
+title.TextSize = 22
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+local version = Instance.new("TextLabel", header)
+version.Size = UDim2.new(0,60,0,15)
+version.Position = UDim2.new(0,20,0,32)
+version.BackgroundTransparency = 1
+version.Text = "v3.2 Pro"
+version.TextColor3 = Color3.fromRGB(100,100,120)
+version.TextSize = 10
+version.Font = Enum.Font.Gotham
+
+-- Close button
+local closeBtn = Instance.new("TextButton", header)
+closeBtn.Size = UDim2.new(0,40,0,40)
+closeBtn.Position = UDim2.new(1, -50, 0, 5)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.new(1,1,1)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 20
+closeBtn.BorderSizePixel = 0
+closeBtn.AutoButtonColor = false
+
+local closeCorner = Instance.new("UICorner", closeBtn)
+closeCorner.CornerRadius = UDim.new(0,10)
+
 closeBtn.MouseButton1Click:Connect(function()
     hubFrame.Visible = false
     floatingButton.Visible = true
 end)
 
--- BOTÃO FLUTUANTE ABRE O HUB
 floatingButton.MouseButton1Click:Connect(function()
     hubFrame.Visible = true
     floatingButton.Visible = false
 end)
 
--- CRIAR BOTÃO DE ABA
+-- Sidebar menu
+local sidebar = Instance.new("Frame", hubFrame)
+sidebar.Size = UDim2.new(0,120,1,-50)
+sidebar.Position = UDim2.new(0,0,0,50)
+sidebar.BackgroundColor3 = Color3.fromRGB(18,18,22)
+sidebar.BorderSizePixel = 0
+
+local contentArea = Instance.new("Frame", hubFrame)
+contentArea.Size = UDim2.new(1, -130, 1, -60)
+contentArea.Position = UDim2.new(0,130,0,60)
+contentArea.BackgroundTransparency = 1
+
+-- Drag hub by header
+do
+    local dragging = false
+    local dragInput, dragStart, startPos
+    header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = hubFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    header.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position - dragStart
+            hubFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- Create tab button helper
 local function createTabButton(text, icon, yPos)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 110, 0, 40)
-    btn.Position = UDim2.new(0, 5, 0, yPos)
-    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    btn.TextColor3 = Color3.fromRGB(150, 150, 180)
+    local btn = Instance.new("TextButton", sidebar)
+    btn.Size = UDim2.new(0,110,0,40)
+    btn.Position = UDim2.new(0,5,0,yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(25,25,35)
+    btn.TextColor3 = Color3.fromRGB(150,150,180)
     btn.Text = icon .. "\n" .. text
     btn.TextSize = 11
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
-    btn.ZIndex = 100002
-    btn.Parent = sidebar
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = btn
-
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,10)
     return btn
 end
 
--- CRIAR ABAS
-local farmTab = createTabButton("Farm", "🎮", 10)
-local marcaTab = createTabButton("Marca", "🎯", 55)
-local skillsTab = createTabButton("Skills", "⚡", 100)
-local auraTab = createTabButton("Aura", "✨", 145)
-local talismaTab = createTabButton("Talismã", "💎", 190)
+-- Create tabs
+local farmTab = createTabButton("Farm","🎮",10)
+local marcaTab = createTabButton("Marca","🎯",55)
+local skillsTab = createTabButton("Skills","⚡",100)
+local auraTab = createTabButton("Aura","✨",145)
+local talismaTab = createTabButton("Talismã","💎",190)
 
--- CONTAINERS DAS ABAS
-local farmContainer = Instance.new("Frame")
-farmContainer.Size = UDim2.new(1, 0, 1, 0)
+-- Create containers
+local farmContainer = Instance.new("Frame", contentArea)
+farmContainer.Size = UDim2.new(1,0,1,0)
 farmContainer.BackgroundTransparency = 1
 farmContainer.Visible = true
-farmContainer.ZIndex = 100002
-farmContainer.Parent = contentArea
 
-local marcaContainer = Instance.new("Frame")
-marcaContainer.Size = UDim2.new(1, 0, 1, 0)
+local marcaContainer = Instance.new("Frame", contentArea)
+marcaContainer.Size = UDim2.new(1,0,1,0)
 marcaContainer.BackgroundTransparency = 1
 marcaContainer.Visible = false
-marcaContainer.ZIndex = 100002
-marcaContainer.Parent = contentArea
 
-local skillsContainer = Instance.new("Frame")
-skillsContainer.Size = UDim2.new(1, 0, 1, 0)
+local skillsContainer = Instance.new("Frame", contentArea)
+skillsContainer.Size = UDim2.new(1,0,1,0)
 skillsContainer.BackgroundTransparency = 1
 skillsContainer.Visible = false
-skillsContainer.ZIndex = 100002
-skillsContainer.Parent = contentArea
 
-local auraContainer = Instance.new("Frame")
-auraContainer.Size = UDim2.new(1, 0, 1, 0)
+local auraContainer = Instance.new("Frame", contentArea)
+auraContainer.Size = UDim2.new(1,0,1,0)
 auraContainer.BackgroundTransparency = 1
 auraContainer.Visible = false
-auraContainer.ZIndex = 100002
-auraContainer.Parent = contentArea
 
-local talismaContainer = Instance.new("Frame")
-talismaContainer.Size = UDim2.new(1, 0, 1, 0)
+local talismaContainer = Instance.new("Frame", contentArea)
+talismaContainer.Size = UDim2.new(1,0,1,0)
 talismaContainer.BackgroundTransparency = 1
 talismaContainer.Visible = false
-talismaContainer.ZIndex = 100002
-talismaContainer.Parent = contentArea
 
--- FUNÇÃO PARA TROCAR ABA
+-- Switch tabs
 local function switchTab(tabName)
     ABA_ATUAL = tabName
-
-    -- Resetar cores
-    farmTab.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    farmTab.TextColor3 = Color3.fromRGB(150, 150, 180)
-    marcaTab.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    marcaTab.TextColor3 = Color3.fromRGB(150, 150, 180)
-    skillsTab.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    skillsTab.TextColor3 = Color3.fromRGB(150, 150, 180)
-    auraTab.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    auraTab.TextColor3 = Color3.fromRGB(150, 150, 180)
-    talismaTab.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    talismaTab.TextColor3 = Color3.fromRGB(150, 150, 180)
-
-    -- Esconder todos
+    local tabs = {farmTab, marcaTab, skillsTab, auraTab, talismaTab}
+    for _, t in ipairs(tabs) do
+        t.BackgroundColor3 = Color3.fromRGB(25,25,35)
+        t.TextColor3 = Color3.fromRGB(150,150,180)
+    end
     farmContainer.Visible = false
     marcaContainer.Visible = false
     skillsContainer.Visible = false
     auraContainer.Visible = false
     talismaContainer.Visible = false
 
-    -- Mostrar aba selecionada
     if tabName == "Farm" then
-        farmTab.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-        farmTab.TextColor3 = Color3.new(1, 1, 1)
+        farmTab.BackgroundColor3 = Color3.fromRGB(50,150,255)
+        farmTab.TextColor3 = Color3.new(1,1,1)
         farmContainer.Visible = true
     elseif tabName == "Marca" then
-        marcaTab.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-        marcaTab.TextColor3 = Color3.new(1, 1, 1)
+        marcaTab.BackgroundColor3 = Color3.fromRGB(50,150,255)
+        marcaTab.TextColor3 = Color3.new(1,1,1)
         marcaContainer.Visible = true
     elseif tabName == "Skills" then
-        skillsTab.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-        skillsTab.TextColor3 = Color3.new(1, 1, 1)
+        skillsTab.BackgroundColor3 = Color3.fromRGB(50,150,255)
+        skillsTab.TextColor3 = Color3.new(1,1,1)
         skillsContainer.Visible = true
     elseif tabName == "Aura" then
-        auraTab.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-        auraTab.TextColor3 = Color3.new(1, 1, 1)
+        auraTab.BackgroundColor3 = Color3.fromRGB(50,150,255)
+        auraTab.TextColor3 = Color3.new(1,1,1)
         auraContainer.Visible = true
     elseif tabName == "Talismã" then
-        talismaTab.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-        talismaTab.TextColor3 = Color3.new(1, 1, 1)
+        talismaTab.BackgroundColor3 = Color3.fromRGB(50,150,255)
+        talismaTab.TextColor3 = Color3.new(1,1,1)
         talismaContainer.Visible = true
     end
 end
@@ -496,40 +398,34 @@ skillsTab.MouseButton1Click:Connect(function() switchTab("Skills") end)
 auraTab.MouseButton1Click:Connect(function() switchTab("Aura") end)
 talismaTab.MouseButton1Click:Connect(function() switchTab("Talismã") end)
 
--- FUNÇÃO CRIAR BOTÃO
+-- Button creator (with status label)
 local function createButton(text, parent, yPos)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 340, 0, 40)
-    btn.Position = UDim2.new(0, 10, 0, yPos)
-    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-    btn.TextColor3 = Color3.new(1, 1, 1)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(0,340,0,40)
+    btn.Position = UDim2.new(0,10,0,yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(45,45,65)
+    btn.TextColor3 = Color3.new(1,1,1)
     btn.Text = text
     btn.TextSize = 13
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
-    btn.ZIndex = 100003
-    btn.Parent = parent
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = btn
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,10)
 
-    local status = Instance.new("TextLabel")
-    status.Size = UDim2.new(0, 70, 0, 22)
-    status.Position = UDim2.new(1, -75, 0.5, -11)
-    status.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    status.TextColor3 = Color3.new(1, 1, 1)
+    local status = Instance.new("TextLabel", btn)
+    status.Size = UDim2.new(0,70,0,22)
+    status.Position = UDim2.new(1,-75,0.5,-11)
+    status.BackgroundColor3 = Color3.fromRGB(200,50,50)
+    status.TextColor3 = Color3.new(1,1,1)
     status.Text = "OFF"
     status.TextSize = 10
     status.Font = Enum.Font.GothamBold
     status.BorderSizePixel = 0
-    status.ZIndex = 100004
-    status.Parent = btn
 
-    local statusCorner = Instance.new("UICorner")
-    statusCorner.CornerRadius = UDim.new(1, 0)
-    statusCorner.Parent = status
+    local statusCorner = Instance.new("UICorner", status)
+    statusCorner.CornerRadius = UDim.new(1,0)
 
     return btn, status
 end
@@ -539,651 +435,489 @@ local clickButton, clickStatus = createButton("🖱️ AutoClick", farmContainer
 local rebornButton, rebornStatus = createButton("🔄 AutoReborn", farmContainer, 60)
 local openButton, openStatus = createButton("📦 AutoOpen Baús", farmContainer, 110)
 
--- === ABA MARCA (SIMPLIFICADO) ===
-local toggleButton, toggleStatus = createButton("🎯 AutoReroll Marca", marcaContainer, 10)
-
-local foundLabel = Instance.new("TextLabel")
-foundLabel.Size = UDim2.new(0, 340, 0, 40)
-foundLabel.Position = UDim2.new(0, 10, 0, 60)
-foundLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-foundLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+-- === ABA MARCA ===
+local autoRerollButton, autoRerollStatus = createButton("🎯 AutoReroll Marca", marcaContainer, 10)
+local foundLabel = Instance.new("TextLabel", marcaContainer)
+foundLabel.Size = UDim2.new(0,340,0,40)
+foundLabel.Position = UDim2.new(0,10,0,60)
+foundLabel.BackgroundColor3 = Color3.fromRGB(30,30,40)
+foundLabel.TextColor3 = Color3.fromRGB(255,215,0)
 foundLabel.TextSize = 12
 foundLabel.Font = Enum.Font.GothamBold
 foundLabel.Text = "🎯 Clique no botão acima para começar!\nO sistema vai girar até você desligar."
 foundLabel.TextWrapped = true
-foundLabel.BorderSizePixel = 0
-foundLabel.Parent = marcaContainer
-
-local foundCorner = Instance.new("UICorner")
-foundCorner.CornerRadius = UDim.new(0, 10)
-foundCorner.Parent = foundLabel
+local foundCorner = Instance.new("UICorner", foundLabel)
+foundCorner.CornerRadius = UDim.new(0,10)
 
 -- === ABA SKILLS ===
 local respirationSkillButton, respirationSkillStatus = createButton("☠️ RespirationSkill", skillsContainer, 10)
 
--- Input RespirationSkill
-local respirationDelayLabel = Instance.new("TextLabel")
-respirationDelayLabel.Size = UDim2.new(0, 100, 0, 20)
-respirationDelayLabel.Position = UDim2.new(0, 10, 0, 60)
+-- Respiration input
+local respirationDelayLabel = Instance.new("TextLabel", skillsContainer)
+respirationDelayLabel.Size = UDim2.new(0,100,0,20)
+respirationDelayLabel.Position = UDim2.new(0,10,0,60)
 respirationDelayLabel.BackgroundTransparency = 1
-respirationDelayLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
+respirationDelayLabel.TextColor3 = Color3.fromRGB(150,150,180)
 respirationDelayLabel.TextSize = 11
 respirationDelayLabel.Font = Enum.Font.GothamBold
 respirationDelayLabel.Text = "Delay (segundos):"
 respirationDelayLabel.TextXAlignment = Enum.TextXAlignment.Left
-respirationDelayLabel.ZIndex = 100003
-respirationDelayLabel.Parent = skillsContainer
 
-local respirationDelayInput = Instance.new("TextBox")
-respirationDelayInput.Size = UDim2.new(0, 340, 0, 30)
-respirationDelayInput.Position = UDim2.new(0, 10, 0, 80)
-respirationDelayInput.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-respirationDelayInput.TextColor3 = Color3.new(1, 1, 1)
+local respirationDelayInput = Instance.new("TextBox", skillsContainer)
+respirationDelayInput.Size = UDim2.new(0,340,0,30)
+respirationDelayInput.Position = UDim2.new(0,10,0,80)
+respirationDelayInput.BackgroundColor3 = Color3.fromRGB(35,35,50)
+respirationDelayInput.TextColor3 = Color3.new(1,1,1)
 respirationDelayInput.PlaceholderText = "0.01 a 5"
 respirationDelayInput.Text = tostring(RESPIRATION_SKILL_DELAY)
-respirationDelayInput.TextSize = 13
-respirationDelayInput.Font = Enum.Font.Gotham
 respirationDelayInput.ClearTextOnFocus = false
-respirationDelayInput.BorderSizePixel = 0
-respirationDelayInput.ZIndex = 100003
-respirationDelayInput.Parent = skillsContainer
-
-local respirationInputCorner = Instance.new("UICorner")
-respirationInputCorner.CornerRadius = UDim.new(0, 8)
-respirationInputCorner.Parent = respirationDelayInput
+respirationDelayInput.Font = Enum.Font.Gotham
+respirationDelayInput.TextSize = 13
 
 respirationDelayInput.FocusLost:Connect(function()
-    local valor = tonumber(respirationDelayInput.Text)
-    if valor then
-        RESPIRATION_SKILL_DELAY = math.clamp(valor, 0.01, 5)
-        respirationDelayInput.Text = string.format("%.2f", RESPIRATION_SKILL_DELAY)
-    else
-        respirationDelayInput.Text = string.format("%.2f", RESPIRATION_SKILL_DELAY)
-    end
+    local v = tonumber(respirationDelayInput.Text)
+    if v then RESPIRATION_SKILL_DELAY = math.clamp(v, 0.01, 5); respirationDelayInput.Text = string.format("%.2f", RESPIRATION_SKILL_DELAY)
+    else respirationDelayInput.Text = string.format("%.2f", RESPIRATION_SKILL_DELAY) end
 end)
 
--- === NOVA FUNÇÃO: "Full DMG" (substituição conforme solicitado) ===
--- Configuração da skill (conforme seu bloco)
-local skillId = 200616   -- skill max
-local harmIndex = 15     -- dano máximo
-
--- Estado específico da função Full DMG
-local autoFireEnabled = false
-local delayValue = 0.5
-local detectedHeroes = {} -- cache universal de GUIDs detectados
-local autoFireRunning = false -- evita múltiplas threads
-
--- Botão Full DMG na aba Skills
-local fullDmgButton, fullDmgStatus = createButton("⚔️ Full DMG", skillsContainer, 140)
-
--- Caixa de delay para Full DMG
-local fullDelayLabel = Instance.new("TextLabel")
-fullDelayLabel.Size = UDim2.new(0, 100, 0, 20)
-fullDelayLabel.Position = UDim2.new(0, 10, 0, 190)
-fullDelayLabel.BackgroundTransparency = 1
-fullDelayLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
-fullDelayLabel.TextSize = 11
-fullDelayLabel.Font = Enum.Font.GothamBold
-fullDelayLabel.Text = "Delay (segundos):"
-fullDelayLabel.TextXAlignment = Enum.TextXAlignment.Left
-fullDelayLabel.ZIndex = 100003
-fullDelayLabel.Parent = skillsContainer
-
-local fullDelayBox = Instance.new("TextBox")
-fullDelayBox.Size = UDim2.new(0, 340, 0, 30)
-fullDelayBox.Position = UDim2.new(0, 10, 0, 210)
-fullDelayBox.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-fullDelayBox.TextColor3 = Color3.new(1, 1, 1)
-fullDelayBox.PlaceholderText = "0.001 - 5"
-fullDelayBox.Text = tostring(delayValue)
-fullDelayBox.TextSize = 13
-fullDelayBox.Font = Enum.Font.Gotham
-fullDelayBox.ClearTextOnFocus = false
-fullDelayBox.BorderSizePixel = 0
-fullDelayBox.ZIndex = 100003
-fullDelayBox.Parent = skillsContainer
-
-local fullDelayCorner = Instance.new("UICorner")
-fullDelayCorner.CornerRadius = UDim.new(0, 8)
-fullDelayCorner.Parent = fullDelayBox
-
-fullDelayBox.FocusLost:Connect(function()
-    local val = tonumber(fullDelayBox.Text)
-    if val then
-        delayValue = math.clamp(val, 0.001, 5)
-        fullDelayBox.Text = string.format("%.3f", delayValue)
-    else
-        fullDelayBox.Text = string.format("%.3f", delayValue)
-    end
-end)
-
--- Função para obter delay atual
-local function getDelayValue()
-    local val = tonumber(fullDelayBox.Text)
-    if not val then val = 0.5 end
-    return math.clamp(val, 0.001, 5)
-end
-
--- HOOK universal para capturar todos os pets que o cliente dispara (conforme seu bloco)
+-- === Full DMG (integrated exactly, using hub UI) ===
 do
-    local success, err = pcall(function()
-        local oldNamecall
-        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-            local args = {...}
-            local method = getnamecallmethod()
-            if self == heroSkillRemote and method == "FireServer" then
-                local data = args[1]
-                if data and data.heroGuid then
-                    -- armazena GUID de qualquer pet detectado
-                    if not detectedHeroes[data.heroGuid] then
-                        detectedHeroes[data.heroGuid] = true
-                        print("✅ Pet detectado:", data.heroGuid)
+    -- CONFIGURAÇÃO DA SKILL
+    local fd_skillId = 200616
+    local fd_harmIndex = 15
+
+    -- services via remotes already defined
+    local heroRemote = heroSkillRemote
+
+    -- estado
+    local autoFireEnabled_fd = false
+    local delayValue_fd = 0.5
+    local detectedHeroes_fd = detectedHeroes -- share global cache (populated by hook below)
+    local autoFireRunning_fd = false
+
+    -- Delay input (within skillsContainer)
+    local fdDelayLabel = Instance.new("TextLabel", skillsContainer)
+    fdDelayLabel.Size = UDim2.new(0,100,0,20)
+    fdDelayLabel.Position = UDim2.new(0,10,0,190)
+    fdDelayLabel.BackgroundTransparency = 1
+    fdDelayLabel.TextColor3 = Color3.fromRGB(150,150,180)
+    fdDelayLabel.TextSize = 11
+    fdDelayLabel.Font = Enum.Font.GothamBold
+    fdDelayLabel.Text = "Full DMG Delay:"
+    fdDelayLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local fdDelayBox = Instance.new("TextBox", skillsContainer)
+    fdDelayBox.Size = UDim2.new(0,340,0,30)
+    fdDelayBox.Position = UDim2.new(0,10,0,210)
+    fdDelayBox.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    fdDelayBox.Text = tostring(delayValue_fd)
+    fdDelayBox.PlaceholderText = "0.001 - 5"
+    fdDelayBox.ClearTextOnFocus = false
+    fdDelayBox.Font = Enum.Font.Gotham
+    fdDelayBox.TextSize = 13
+
+    fdDelayBox.FocusLost:Connect(function()
+        local v = tonumber(fdDelayBox.Text)
+        if v then delayValue_fd = math.clamp(v, 0.001, 5); fdDelayBox.Text = string.format("%.3f", delayValue_fd)
+        else fdDelayBox.Text = string.format("%.3f", delayValue_fd) end
+    end)
+
+    -- Hook (try, may fail if executor blocks)
+    do
+        local ok, err = pcall(function()
+            local oldNamecall
+            oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+                local method = getnamecallmethod()
+                if self == heroRemote and method == "FireServer" then
+                    local args = {...}
+                    local data = args[1]
+                    if type(data) == "table" and data.heroGuid then
+                        if not detectedHeroes_fd[data.heroGuid] then
+                            detectedHeroes_fd[data.heroGuid] = true
+                            print("✅ Full DMG Pet detectado:", data.heroGuid)
+                        end
                     end
                 end
-            end
-            return oldNamecall(self, ...)
-        end)
-    end)
-    if not success then
-        warn("[Full DMG] Falha ao instalar hookmetamethod:", err)
-        -- fallback: user can manually trigger skill to populate detectedHeroes or add manual GUI (not added by request)
-    end
-end
-
--- LOOP CONTÍNUO DE AUTO FIRE FULL DAMAGE (conforme seu bloco, com guard)
-local function autoFireLoop()
-    if autoFireRunning then return end
-    autoFireRunning = true
-    while autoFireEnabled do
-        local delayTime = getDelayValue()
-        for guid,_ in pairs(detectedHeroes) do
-            pcall(function()
-                heroSkillRemote:FireServer({
-                    heroGuid = guid,
-                    skillId = skillId,       -- sempre skill max
-                    harmIndex = harmIndex,   -- sempre dano máximo
-                    isSkill = true
-                })
+                return oldNamecall(self, ...)
             end)
-            task.wait(0.01) -- espaçamento pequeno entre GUIDs
+        end)
+        if not ok then
+            warn("[Full DMG] hookmetamethod instalação falhou:", err)
+            -- fallback: user can still manually populate detectedHeroes_fd if needed
         end
-        task.wait(delayTime)
     end
-    autoFireRunning = false
-end
 
--- BOTÃO LIGAR/DESLIGAR Full DMG
-fullDmgButton.MouseButton1Click:Connect(function()
-    autoFireEnabled = not autoFireEnabled
-    fullDmgStatus.Text = autoFireEnabled and "ON" or "OFF"
-    fullDmgStatus.BackgroundColor3 = autoFireEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    fullDmgButton.Text = "⚔️ Full DMG"
-    if autoFireEnabled then
-        task.spawn(autoFireLoop)
+    -- Loop
+    local function autoFireLoop_fd()
+        if autoFireRunning_fd then return end
+        autoFireRunning_fd = true
+        while autoFireEnabled_fd do
+            local delayTime = (tonumber(fdDelayBox.Text) and math.clamp(tonumber(fdDelayBox.Text), 0.001, 5)) or delayValue_fd
+            for guid, _ in pairs(detectedHeroes_fd) do
+                pcall(function()
+                    if heroRemote then
+                        heroRemote:FireServer({
+                            heroGuid = guid,
+                            skillId = fd_skillId,
+                            harmIndex = fd_harmIndex,
+                            isSkill = true
+                        })
+                    end
+                end)
+            end
+            task.wait(delayTime)
+        end
+        autoFireRunning_fd = false
     end
-end)
+
+    -- Add Full DMG button
+    local fullDmgButton, fullDmgStatus = createButton("⚔️ Full DMG", skillsContainer, 140)
+    fullDmgButton.MouseButton1Click:Connect(function()
+        autoFireEnabled_fd = not autoFireEnabled_fd
+        fullDmgStatus.Text = autoFireEnabled_fd and "ON" or "OFF"
+        fullDmgStatus.BackgroundColor3 = autoFireEnabled_fd and Color3.fromRGB(50,200,50) or Color3.fromRGB(200,50,50)
+        if autoFireEnabled_fd then
+            task.spawn(autoFireLoop_fd)
+        end
+    end)
+end
 
 -- === ABA AURA ===
-local haloInfo = Instance.new("TextLabel")
-haloInfo.Size = UDim2.new(0, 340, 0, 30)
-haloInfo.Position = UDim2.new(0, 10, 0, 10)
-haloInfo.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-haloInfo.TextColor3 = Color3.fromRGB(255, 215, 0)
+local haloInfo = Instance.new("TextLabel", auraContainer)
+haloInfo.Size = UDim2.new(0,340,0,30)
+haloInfo.Position = UDim2.new(0,10,0,10)
+haloInfo.BackgroundColor3 = Color3.fromRGB(30,30,40)
+haloInfo.TextColor3 = Color3.fromRGB(255,215,0)
 haloInfo.TextSize = 12
 haloInfo.Font = Enum.Font.GothamBold
 haloInfo.Text = "✨ Sistema de Halos"
-haloInfo.BorderSizePixel = 0
-haloInfo.Parent = auraContainer
-
-local haloInfoCorner = Instance.new("UICorner")
-haloInfoCorner.CornerRadius = UDim.new(0, 10)
-haloInfoCorner.Parent = haloInfo
 
 local bronzeButton, bronzeStatus = createButton("🥉 Reroll Bronze", auraContainer, 50)
 local ouroButton, ouroStatus = createButton("🥇 Reroll Ouro", auraContainer, 100)
 local diamanteButton, diamanteStatus = createButton("💎 Reroll Diamante", auraContainer, 150)
 local exchangeButton, exchangeStatus = createButton("🎁 Exchange Halo (Diamante)", auraContainer, 200)
 
--- Slider Exchange Halo
-local exchangeSliderLabel = Instance.new("TextLabel")
-exchangeSliderLabel.Size = UDim2.new(0, 340, 0, 20)
-exchangeSliderLabel.Position = UDim2.new(0, 10, 0, 250)
-exchangeSliderLabel.BackgroundTransparency = 1
-exchangeSliderLabel.TextColor3 = Color3.fromRGB(150, 150, 180)
-exchangeSliderLabel.TextSize = 11
-exchangeSliderLabel.Font = Enum.Font.GothamBold
-exchangeSliderLabel.Text = "Delay (segundos):"
-exchangeSliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-exchangeSliderLabel.ZIndex = 100003
-exchangeSliderLabel.Parent = auraContainer
+-- Exchange delay input
+local exchangeDelayLabel = Instance.new("TextLabel", auraContainer)
+exchangeDelayLabel.Size = UDim2.new(0,340,0,20)
+exchangeDelayLabel.Position = UDim2.new(0,10,0,250)
+exchangeDelayLabel.BackgroundTransparency = 1
+exchangeDelayLabel.TextColor3 = Color3.fromRGB(150,150,180)
+exchangeDelayLabel.TextSize = 11
+exchangeDelayLabel.Font = Enum.Font.GothamBold
+exchangeDelayLabel.Text = "Delay (segundos):"
+exchangeDelayLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local exchangeDelayInput = Instance.new("TextBox")
-exchangeDelayInput.Size = UDim2.new(0, 340, 0, 25)
-exchangeDelayInput.Position = UDim2.new(0, 10, 0, 270)
-exchangeDelayInput.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-exchangeDelayInput.TextColor3 = Color3.new(1, 1, 1)
+local exchangeDelayInput = Instance.new("TextBox", auraContainer)
+exchangeDelayInput.Size = UDim2.new(0,340,0,25)
+exchangeDelayInput.Position = UDim2.new(0,10,0,270)
+exchangeDelayInput.BackgroundColor3 = Color3.fromRGB(35,35,50)
+exchangeDelayInput.TextColor3 = Color3.new(1,1,1)
 exchangeDelayInput.PlaceholderText = "0.01 a 0.51"
 exchangeDelayInput.Text = string.format("%.2f", EXCHANGE_HALO_DELAY)
-exchangeDelayInput.TextSize = 13
-exchangeDelayInput.Font = Enum.Font.Gotham
 exchangeDelayInput.ClearTextOnFocus = false
-exchangeDelayInput.BorderSizePixel = 0
-exchangeDelayInput.ZIndex = 100003
-exchangeDelayInput.Parent = auraContainer
-
-local exchangeInputCorner = Instance.new("UICorner")
-exchangeInputCorner.CornerRadius = UDim.new(0, 8)
-exchangeInputCorner.Parent = exchangeDelayInput
+exchangeDelayInput.Font = Enum.Font.Gotham
+exchangeDelayInput.TextSize = 13
 
 exchangeDelayInput.FocusLost:Connect(function()
-    local valor = tonumber(exchangeDelayInput.Text)
-    if valor then
-        EXCHANGE_HALO_DELAY = math.clamp(valor, 0.01, 0.51)
-        exchangeDelayInput.Text = string.format("%.2f", EXCHANGE_HALO_DELAY)
-    else
-        exchangeDelayInput.Text = string.format("%.2f", EXCHANGE_HALO_DELAY)
-    end
+    local v = tonumber(exchangeDelayInput.Text)
+    if v then EXCHANGE_HALO_DELAY = math.clamp(v, 0.01, 0.51); exchangeDelayInput.Text = string.format("%.2f", EXCHANGE_HALO_DELAY)
+    else exchangeDelayInput.Text = string.format("%.2f", EXCHANGE_HALO_DELAY) end
 end)
 
 -- === ABA TALISMÃ ===
-local talismaInfo = Instance.new("TextLabel")
-talismaInfo.Size = UDim2.new(0, 340, 0, 40)
-talismaInfo.Position = UDim2.new(0, 10, 0, 10)
-talismaInfo.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-talismaInfo.TextColor3 = Color3.fromRGB(255, 215, 0)
+local talismaInfo = Instance.new("TextLabel", talismaContainer)
+talismaInfo.Size = UDim2.new(0,340,0,40)
+talismaInfo.Position = UDim2.new(0,10,0,10)
+talismaInfo.BackgroundColor3 = Color3.fromRGB(30,30,40)
+talismaInfo.TextColor3 = Color3.fromRGB(255,215,0)
 talismaInfo.TextSize = 11
 talismaInfo.Font = Enum.Font.GothamBold
 talismaInfo.Text = "💎 Sistema de Ornamentos\nClique para selecionar e equipar"
 talismaInfo.TextWrapped = true
-talismaInfo.BorderSizePixel = 0
-talismaInfo.Parent = talismaContainer
 
-local talismaInfoCorner = Instance.new("UICorner")
-talismaInfoCorner.CornerRadius = UDim.new(0, 10)
-talismaInfoCorner.Parent = talismaInfo
-
--- Criar botões de ornamentos
 local ornamentButtons = {}
-local yPos = 60
-for name, config in pairs(ORNAMENTS) do
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 340, 0, 45)
-    btn.Position = UDim2.new(0, 10, 0, yPos)
-    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Text = "💎 " .. name
-    btn.TextSize = 14
-    btn.Font = Enum.Font.GothamBold
-    btn.BorderSizePixel = 0
-    btn.AutoButtonColor = false
-    btn.Parent = talismaContainer
+do
+    local y = 60
+    for name, cfg in pairs(ORNAMENTS) do
+        local btn = Instance.new("TextButton", talismaContainer)
+        btn.Size = UDim2.new(0,340,0,45)
+        btn.Position = UDim2.new(0,10,0,y)
+        btn.BackgroundColor3 = Color3.fromRGB(45,45,65)
+        btn.TextColor3 = Color3.new(1,1,1)
+        btn.Text = "💎 " .. name
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 14
+        btn.BorderSizePixel = 0
+        btn.AutoButtonColor = false
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = btn
+        local corner = Instance.new("UICorner", btn)
+        corner.CornerRadius = UDim.new(0,10)
 
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(60, 60, 80)
-    stroke.Thickness = 2
-    stroke.Transparency = 0.5
-    stroke.Parent = btn
+        local stroke = Instance.new("UIStroke", btn)
+        stroke.Color = Color3.fromRGB(60,60,80)
+        stroke.Thickness = 2
+        stroke.Transparency = 0.5
 
-    ornamentButtons[name] = {button = btn, stroke = stroke, config = config}
-    yPos = yPos + 55
+        ornamentButtons[name] = { button = btn, stroke = stroke, cfg = cfg }
+
+        y = y + 55
+    end
 end
 
-local equipButton = Instance.new("TextButton")
-equipButton.Size = UDim2.new(0, 340, 0, 45)
-equipButton.Position = UDim2.new(0, 10, 0, 230)
-equipButton.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-equipButton.TextColor3 = Color3.new(1, 1, 1)
+local equipButton = Instance.new("TextButton", talismaContainer)
+equipButton.Size = UDim2.new(0,340,0,45)
+equipButton.Position = UDim2.new(0,10,0,230)
+equipButton.BackgroundColor3 = Color3.fromRGB(50,150,255)
+equipButton.TextColor3 = Color3.new(1,1,1)
 equipButton.Text = "⚡ EQUIPAR SELECIONADO"
-equipButton.TextSize = 15
 equipButton.Font = Enum.Font.GothamBold
+equipButton.TextSize = 15
 equipButton.BorderSizePixel = 0
 equipButton.AutoButtonColor = false
-equipButton.Parent = talismaContainer
 
-local equipCorner = Instance.new("UICorner")
-equipCorner.CornerRadius = UDim.new(0, 10)
-equipCorner.Parent = equipButton
-
-local talismaDesc = Instance.new("TextLabel")
-talismaDesc.Size = UDim2.new(0, 340, 0, 35)
-talismaDesc.Position = UDim2.new(0, 10, 0, 285)
+local talismaDesc = Instance.new("TextLabel", talismaContainer)
+talismaDesc.Size = UDim2.new(0,340,0,35)
+talismaDesc.Position = UDim2.new(0,10,0,285)
 talismaDesc.BackgroundTransparency = 1
-talismaDesc.TextColor3 = Color3.fromRGB(150, 150, 180)
-talismaDesc.TextSize = 10
+talismaDesc.TextColor3 = Color3.fromRGB(150,150,180)
 talismaDesc.Font = Enum.Font.Gotham
+talismaDesc.TextSize = 10
 talismaDesc.Text = "Selecione um ornamento e clique em EQUIPAR\nDMG = Dano | Power = Poder | Lucky = Sorte"
 talismaDesc.TextWrapped = true
-talismaDesc.Parent = talismaContainer
 
--- FUNÇÕES DE AUTO (mantidas)
-local function autoClick()
-    while AUTO_CLICK_ATIVO do
-        pcall(function()
-            local args = {{}} -- mantenha conforme o formato do servidor
-            clickRemote:FireServer(unpack(args))
-        end)
-        task.wait(0.01)
-    end
-end
-
-local function autoReborn()
-    while AUTO_REBORN_ATIVO do
-        pcall(function()
-            rebornRemote:FireServer()
-        end)
-        task.wait(1)
-    end
-end
-
-local function autoOpenBaus()
-    local baus = {820001, 820002, 820003, 820004, 820005}
-    while AUTO_OPEN_ATIVO do
-        for _, bauID in ipairs(baus) do
-            pcall(function()
-                openBoxRemote:FireServer(bauID)
-            end)
-            task.wait(0.01)
-        end
-    end
-end
-
-local function autoRespirationSkill()
-    while AUTO_RESPIRATION_SKILL_ATIVO do
-        for i = 1, 5 do
-            local args = {{
-                harmIndex = i,
-                skillType = 2,
-                skillGemKey = "9_2",
-                skillId = 200401
-            }}
-            pcall(function()
-                respirationSkillRemote:FireServer(unpack(args))
-            end)
-        end
-        task.wait(RESPIRATION_SKILL_DELAY)
-    end
-end
-
-local function autoHaloBronze()
-    while AUTO_HALO_BRONZE_ATIVO do
-        pcall(function()
-            rerollHaloRemote:InvokeServer(1)
-        end)
-        task.wait(HALO_DELAY)
-    end
-end
-
-local function autoHaloOuro()
-    while AUTO_HALO_OURO_ATIVO do
-        pcall(function()
-            rerollHaloRemote:InvokeServer(2)
-        end)
-        task.wait(HALO_DELAY)
-    end
-end
-
-local function autoHaloDiamante()
-    while AUTO_HALO_DIAMANTE_ATIVO do
-        pcall(function()
-            rerollHaloRemote:InvokeServer(3)
-        end)
-        task.wait(HALO_DELAY)
-    end
-end
-
-local function autoExchangeHalo()
-    while AUTO_EXCHANGE_HALO_ATIVO do
-        pcall(function()
-            local args = {{
-                haloType = 3,
-                count = 1
-            }}
-            exchangeHaloRemote:InvokeServer(unpack(args))
-        end)
-        task.wait(EXCHANGE_HALO_DELAY)
-    end
-end
-
-local function autoReroll()
-    while AUTO_REROLL_ATIVO do
-        pcall(function()
-            rerollRemote:InvokeServer(ORNAMENT_ID)
-        end)
-        task.wait(DELAY_REROLL)
-    end
-end
-
--- TOGGLES ABA FARM
-clickButton.MouseButton1Click:Connect(function()
-    AUTO_CLICK_ATIVO = not AUTO_CLICK_ATIVO
-    clickStatus.Text = AUTO_CLICK_ATIVO and "ON" or "OFF"
-    clickStatus.BackgroundColor3 = AUTO_CLICK_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    if AUTO_CLICK_ATIVO and not taskRunningFlags.autoClick then
-        taskRunningFlags.autoClick = true
-        task.spawn(function()
-            autoClick()
-            taskRunningFlags.autoClick = false
-        end)
-    end
-end)
-
-rebornButton.MouseButton1Click:Connect(function()
-    AUTO_REBORN_ATIVO = not AUTO_REBORN_ATIVO
-    rebornStatus.Text = AUTO_REBORN_ATIVO and "ON" or "OFF"
-    rebornStatus.BackgroundColor3 = AUTO_REBORN_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    if AUTO_REBORN_ATIVO and not taskRunningFlags.autoReborn then
-        taskRunningFlags.autoReborn = true
-        task.spawn(function()
-            autoReborn()
-            taskRunningFlags.autoReborn = false
-        end)
-    end
-end)
-
-openButton.MouseButton1Click:Connect(function()
-    AUTO_OPEN_ATIVO = not AUTO_OPEN_ATIVO
-    openStatus.Text = AUTO_OPEN_ATIVO and "ON" or "OFF"
-    openStatus.BackgroundColor3 = AUTO_OPEN_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    if AUTO_OPEN_ATIVO and not taskRunningFlags.autoOpen then
-        taskRunningFlags.autoOpen = true
-        task.spawn(function()
-            autoOpenBaus()
-            taskRunningFlags.autoOpen = false
-        end)
-    end
-end)
-
--- TOGGLE ABA MARCA (SIMPLIFICADO)
-toggleButton.MouseButton1Click:Connect(function()
-    AUTO_REROLL_ATIVO = not AUTO_REROLL_ATIVO
-    toggleStatus.Text = AUTO_REROLL_ATIVO and "ON" or "OFF"
-    toggleStatus.BackgroundColor3 = AUTO_REROLL_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-
-    if AUTO_REROLL_ATIVO then
-        foundLabel.Text = "🎯 Girando marca automaticamente...\nClique novamente para parar."
-        if not taskRunningFlags.autoReroll then
-            taskRunningFlags.autoReroll = true
-            task.spawn(function()
-                autoReroll()
-                taskRunningFlags.autoReroll = false
-            end)
-        end
-    else
-        foundLabel.Text = "🎯 Sistema parado!\nClique no botão acima para começar."
-    end
-end)
-
--- TOGGLES ABA SKILLS (respiration)
-respirationSkillButton.MouseButton1Click:Connect(function()
-    AUTO_RESPIRATION_SKILL_ATIVO = not AUTO_RESPIRATION_SKILL_ATIVO
-    respirationSkillStatus.Text = AUTO_RESPIRATION_SKILL_ATIVO and "ON" or "OFF"
-    respirationSkillStatus.BackgroundColor3 = AUTO_RESPIRATION_SKILL_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    if AUTO_RESPIRATION_SKILL_ATIVO and not taskRunningFlags.autoRespiration then
-        taskRunningFlags.autoRespiration = true
-        task.spawn(function()
-            autoRespirationSkill()
-            taskRunningFlags.autoRespiration = false
-        end)
-    end
-end)
-
--- TOGGLES ABA AURA
-bronzeButton.MouseButton1Click:Connect(function()
-    AUTO_HALO_BRONZE_ATIVO = not AUTO_HALO_BRONZE_ATIVO
-    bronzeStatus.Text = AUTO_HALO_BRONZE_ATIVO and "ON" or "OFF"
-    bronzeStatus.BackgroundColor3 = AUTO_HALO_BRONZE_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    if AUTO_HALO_BRONZE_ATIVO and not taskRunningFlags.autoHaloBronze then
-        taskRunningFlags.autoHaloBronze = true
-        task.spawn(function()
-            autoHaloBronze()
-            taskRunningFlags.autoHaloBronze = false
-        end)
-    end
-end)
-
-ouroButton.MouseButton1Click:Connect(function()
-    AUTO_HALO_OURO_ATIVO = not AUTO_HALO_OURO_ATIVO
-    ouroStatus.Text = AUTO_HALO_OURO_ATIVO and "ON" or "OFF"
-    ouroStatus.BackgroundColor3 = AUTO_HALO_OURO_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    if AUTO_HALO_OURO_ATIVO and not taskRunningFlags.autoHaloOuro then
-        taskRunningFlags.autoHaloOuro = true
-        task.spawn(function()
-            autoHaloOuro()
-            taskRunningFlags.autoHaloOuro = false
-        end)
-    end
-end)
-
-diamanteButton.MouseButton1Click:Connect(function()
-    AUTO_HALO_DIAMANTE_ATIVO = not AUTO_HALO_DIAMANTE_ATIVO
-    diamanteStatus.Text = AUTO_HALO_DIAMANTE_ATIVO and "ON" or "OFF"
-    diamanteStatus.BackgroundColor3 = AUTO_HALO_DIAMANTE_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    if AUTO_HALO_DIAMANTE_ATIVO and not taskRunningFlags.autoHaloDiamante then
-        taskRunningFlags.autoHaloDiamante = true
-        task.spawn(function()
-            autoHaloDiamante()
-            taskRunningFlags.autoHaloDiamante = false
-        end)
-    end
-end)
-
-exchangeButton.MouseButton1Click:Connect(function()
-    AUTO_EXCHANGE_HALO_ATIVO = not AUTO_EXCHANGE_HALO_ATIVO
-    exchangeStatus.Text = AUTO_EXCHANGE_HALO_ATIVO and "ON" or "OFF"
-    exchangeStatus.BackgroundColor3 = AUTO_EXCHANGE_HALO_ATIVO and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-    if AUTO_EXCHANGE_HALO_ATIVO and not taskRunningFlags.autoExchangeHalo then
-        taskRunningFlags.autoExchangeHalo = true
-        task.spawn(function()
-            autoExchangeHalo()
-            taskRunningFlags.autoExchangeHalo = false
-        end)
-    end
-end)
-
--- TOGGLES ABA TALISMÃ
+local ornamentSelecionado = nil
 for name, data in pairs(ornamentButtons) do
     data.button.MouseButton1Click:Connect(function()
-        -- Desselecionar todos
+        -- deselect all
         for n, d in pairs(ornamentButtons) do
-            d.button.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-            d.stroke.Color = Color3.fromRGB(60, 60, 80)
+            d.button.BackgroundColor3 = Color3.fromRGB(45,45,65)
+            d.stroke.Color = Color3.fromRGB(60,60,80)
             d.stroke.Transparency = 0.5
         end
-
-        -- Selecionar o clicado
-        data.button.BackgroundColor3 = Color3.fromRGB(60, 120, 255)
-        data.stroke.Color = Color3.fromRGB(100, 180, 255)
+        data.button.BackgroundColor3 = Color3.fromRGB(60,120,255)
+        data.stroke.Color = Color3.fromRGB(100,180,255)
         data.stroke.Transparency = 0
         ornamentSelecionado = name
-
-        talismaDesc.Text = "✅ " .. name .. " selecionado!\nClique em EQUIPAR para usar."
-        talismaDesc.TextColor3 = Color3.fromRGB(100, 255, 100)
+        talismaDesc.Text = "✅ " .. name .. " selecionado! Clique em EQUIPAR para usar."
+        talismaDesc.TextColor3 = Color3.fromRGB(100,255,100)
     end)
 end
 
 equipButton.MouseButton1Click:Connect(function()
     if not ornamentSelecionado then
-        talismaDesc.Text = "⚠️ Selecione um ornamento primeiro!\nClique em um dos ornamentos acima."
-        talismaDesc.TextColor3 = Color3.fromRGB(255, 100, 100)
+        talismaDesc.Text = "⚠️ Selecione um ornamento primeiro!"
+        talismaDesc.TextColor3 = Color3.fromRGB(255,100,100)
         return
     end
-
-    local config = ORNAMENTS[ornamentSelecionado]
-    local args = {{
-        ornamentId = config.ornamentId,
-        machineId = config.machineId,
-        isEquip = true
-    }}
-
+    local cfg = ORNAMENTS[ornamentSelecionado]
     pcall(function()
-        local result = useOrnamentRemote:InvokeServer(unpack(args))
-        print(string.format("✅ Ornamento %s equipado! Retorno: %s",
-            ornamentSelecionado,
-            tostring(result)
-        ))
+        if useOrnamentRemote then
+            local result = useOrnamentRemote:InvokeServer({
+                ornamentId = cfg.ornamentId,
+                machineId = cfg.machineId,
+                isEquip = true
+            })
+            print("Ornamento equipado:", ornamentSelecionado, result)
+        end
     end)
-
-    talismaDesc.Text = "✅ " .. ornamentSelecionado .. " equipado com sucesso!\nSelecione outro para equipar novamente."
-    talismaDesc.TextColor3 = Color3.fromRGB(100, 255, 100)
+    talismaDesc.Text = "✅ " .. ornamentSelecionado .. " equipado com sucesso!"
+    talismaDesc.TextColor3 = Color3.fromRGB(100,255,100)
 end)
 
--- SLIDER EXCHANGE HALO
-local exchangeDragging = false
+-- === FUNÇÕES DE AUTO (implementações) ===
 
-local exchangeSliderBar = Instance.new("Frame")
-exchangeSliderBar.Size = UDim2.new(0, 340, 0, 8)
-exchangeSliderBar.Position = UDim2.new(0, 10, 0, 300)
-exchangeSliderBar.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-exchangeSliderBar.BorderSizePixel = 0
-exchangeSliderBar.Visible = true
-exchangeSliderBar.Parent = auraContainer
-
-local exchangeSliderCorner = Instance.new("UICorner")
-exchangeSliderCorner.CornerRadius = UDim.new(1, 0)
-exchangeSliderCorner.Parent = exchangeSliderBar
-
-local exchangeSliderFill = Instance.new("Frame")
-exchangeSliderFill.Size = UDim2.new(EXCHANGE_HALO_DELAY/0.5, 0, 1, 0)
-exchangeSliderFill.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
-exchangeSliderFill.BorderSizePixel = 0
-exchangeSliderFill.Parent = exchangeSliderBar
-
-local exchangeSliderFillCorner = Instance.new("UICorner")
-exchangeSliderFillCorner.CornerRadius = UDim.new(1, 0)
-exchangeSliderFillCorner.Parent = exchangeSliderFill
-
-local function updateExchangeSlider(input)
-    local relativeX = math.clamp(input.Position.X - exchangeSliderBar.AbsolutePosition.X, 0, exchangeSliderBar.AbsoluteSize.X)
-    EXCHANGE_HALO_DELAY = math.clamp((relativeX / exchangeSliderBar.AbsoluteSize.X) * 0.5, 0.01, 0.51)
-    exchangeSliderFill.Size = UDim2.new(relativeX / exchangeSliderBar.AbsoluteSize.X, 0, 1, 0)
-    exchangeSliderLabel.Text = string.format("Delay: %.2fs", EXCHANGE_HALO_DELAY)
-    exchangeDelayInput.Text = string.format("%.2f", EXCHANGE_HALO_DELAY)
+-- AutoClick
+local function autoClick()
+    if getFlag("autoClick") then return end
+    setFlag("autoClick", true)
+    while AUTO_CLICK_ATIVO do
+        pcall(function()
+            if clickRemote then clickRemote:FireServer({}) end
+        end)
+        task.wait(0.01)
+    end
+    setFlag("autoClick", false)
 end
 
-exchangeSliderBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        exchangeDragging = true
-        updateExchangeSlider(input)
+-- AutoReborn
+local function autoReborn()
+    if getFlag("autoReborn") then return end
+    setFlag("autoReborn", true)
+    while AUTO_REBORN_ATIVO do
+        pcall(function() if rebornRemote then rebornRemote:FireServer() end end)
+        task.wait(1)
+    end
+    setFlag("autoReborn", false)
+end
+
+-- AutoOpen Baus
+local function autoOpenBaus()
+    if getFlag("autoOpen") then return end
+    setFlag("autoOpen", true)
+    local baus = {820001,820002,820003,820004,820005}
+    while AUTO_OPEN_ATIVO do
+        for _, id in ipairs(baus) do
+            pcall(function() if openBoxRemote then openBoxRemote:FireServer(id) end end)
+            task.wait(0.01)
+        end
+    end
+    setFlag("autoOpen", false)
+end
+
+-- Respiration skill
+local function autoRespirationSkill()
+    if getFlag("autoRespiration") then return end
+    setFlag("autoRespiration", true)
+    while AUTO_RESPIRATION_SKILL_ATIVO do
+        for i = 1,5 do
+            pcall(function()
+                if respirationSkillRemote then
+                    respirationSkillRemote:FireServer({
+                        harmIndex = i,
+                        skillType = 2,
+                        skillGemKey = "9_2",
+                        skillId = 200401
+                    })
+                end
+            end)
+        end
+        task.wait(RESPIRATION_SKILL_DELAY)
+    end
+    setFlag("autoRespiration", false)
+end
+
+-- Halo functions
+local function autoHaloBronze()
+    if getFlag("autoHaloBronze") then return end
+    setFlag("autoHaloBronze", true)
+    while AUTO_HALO_BRONZE_ATIVO do
+        pcall(function() if rerollHaloRemote then rerollHaloRemote:InvokeServer(1) end end)
+        task.wait(HALO_DELAY)
+    end
+    setFlag("autoHaloBronze", false)
+end
+
+local function autoHaloOuro()
+    if getFlag("autoHaloOuro") then return end
+    setFlag("autoHaloOuro", true)
+    while AUTO_HALO_OURO_ATIVO do
+        pcall(function() if rerollHaloRemote then rerollHaloRemote:InvokeServer(2) end end)
+        task.wait(HALO_DELAY)
+    end
+    setFlag("autoHaloOuro", false)
+end
+
+local function autoHaloDiamante()
+    if getFlag("autoHaloDiamante") then return end
+    setFlag("autoHaloDiamante", true)
+    while AUTO_HALO_DIAMANTE_ATIVO do
+        pcall(function() if rerollHaloRemote then rerollHaloRemote:InvokeServer(3) end end)
+        task.wait(HALO_DELAY)
+    end
+    setFlag("autoHaloDiamante", false)
+end
+
+local function autoExchangeHalo()
+    if getFlag("autoExchangeHalo") then return end
+    setFlag("autoExchangeHalo", true)
+    while AUTO_EXCHANGE_HALO_ATIVO do
+        pcall(function()
+            if exchangeHaloRemote then
+                exchangeHaloRemote:InvokeServer({ haloType = 3, count = 1 })
+            end
+        end)
+        task.wait(EXCHANGE_HALO_DELAY)
+    end
+    setFlag("autoExchangeHalo", false)
+end
+
+-- AutoReroll (marca)
+local function autoReroll()
+    if getFlag("autoReroll") then return end
+    setFlag("autoReroll", true)
+    while AUTO_REROLL_ATIVO do
+        pcall(function() if rerollRemote then rerollRemote:InvokeServer(ORNAMENT_ID) end end)
+        task.wait(DELAY_REROLL)
+    end
+    setFlag("autoReroll", false)
+end
+
+-- === TOGGLES / Events ===
+
+-- Farm toggles
+clickButton.MouseButton1Click:Connect(function()
+    AUTO_CLICK_ATIVO = not AUTO_CLICK_ATIVO
+    clickStatus.Text = AUTO_CLICK_ATIVO and "ON" or "OFF"
+    clickStatus.BackgroundColor3 = AUTO_CLICK_ATIVO and Color3.fromRGB(50,200,50) or Color3.fromRGB(200,50,50)
+    if AUTO_CLICK_ATIVO then task.spawn(autoClick) end
+end)
+
+rebornButton.MouseButton1Click:Connect(function()
+    AUTO_REBORN_ATIVO = not AUTO_REBORN_ATIVO
+    rebornStatus.Text = AUTO_REBORN_ATIVO and "ON" or "OFF"
+    rebornStatus.BackgroundColor3 = AUTO_REBORN_ATIVO and Color3.fromRGB(50,200,50) or Color3.fromRGB(200,50,50)
+    if AUTO_REBORN_ATIVO then task.spawn(autoReborn) end
+end)
+
+openButton.MouseButton1Click:Connect(function()
+    AUTO_OPEN_ATIVO = not AUTO_OPEN_ATIVO
+    openStatus.Text = AUTO_OPEN_ATIVO and "ON" or "OFF"
+    openStatus.BackgroundColor3 = AUTO_OPEN_ATIVO and Color3.fromRGB(50,200,50) or Color3.fromRGB(200,50,50)
+    if AUTO_OPEN_ATIVO then task.spawn(autoOpenBaus) end
+end)
+
+-- Marca reroll toggle
+autoRerollButton.MouseButton1Click:Connect(function()
+    AUTO_REROLL_ATIVO = not AUTO_REROLL_ATIVO
+    autoRerollStatus.Text = AUTO_REROLL_ATIVO and "ON" or "OFF"
+    autoRerollStatus.BackgroundColor3 = AUTO_REROLL_ATIVO and Color3.fromRGB(50,200,50) or Color3.fromRGB(200,50,50)
+    if AUTO_REROLL_ATIVO then
+        foundLabel.Text = "🎯 Girando marca automaticamente...\nClique novamente para parar."
+        task.spawn(autoReroll)
+    else
+        foundLabel.Text = "🎯 Sistema parado!\nClique no botão acima para começar."
     end
 end)
 
-exchangeSliderBar.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        exchangeDragging = false
-    end
+-- Respiration toggle
+respirationSkillButton.MouseButton1Click:Connect(function()
+    AUTO_RESPIRATION_SKILL_ATIVO = not AUTO_RESPIRATION_SKILL_ATIVO
+    respirationSkillStatus.Text = AUTO_RESPIRATION_SKILL_ATIVO and "ON" or "OFF"
+    respirationSkillStatus.BackgroundColor3 = AUTO_RESPIRATION_SKILL_ATIVO and Color3.fromRGB(50,200,50) or Color3.fromRGB(200,50,50)
+    if AUTO_RESPIRATION_SKILL_ATIVO then task.spawn(autoRespirationSkill) end
 end)
 
-UserInputService.InputChanged:Connect(function(input)
-    if exchangeDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        pcall(function() updateExchangeSlider(input) end)
-    end
+-- Halo toggles
+bronzeButton.MouseButton1Click:Connect(function()
+    AUTO_HALO_BRONZE_ATIVO = not AUTO_HALO_BRONZE_ATIVO
+    bronzeStatus.Text = AUTO_HALO_BRONZE_ATIVO and "ON" or "OFF"
+    bronzeStatus.BackgroundColor3 = AUTO_HALO_BRONZE_ATIVO and Color3.fromRGB(50,200,50) or Color3.fromRGB(200,50,50)
+    if AUTO_HALO_BRONZE_ATIVO then task.spawn(autoHaloBronze) end
 end)
 
--- Inicializar na aba Farm
+ouroButton.MouseButton1Click:Connect(function()
+    AUTO_HALO_OURO_ATIVO = not AUTO_HALO_OURO_ATIVO
+    ouroStatus.Text = AUTO_HALO_OURO_ATIVO and "ON" or "OFF"
+    ouroStatus.BackgroundColor3 = AUTO_HALO_OURO_ATIVO and Color3.fromRGB(50,200,50) or Color3.fromRGB(200,50,50)
+    if AUTO_HALO_OURO_ATIVO then task.spawn(autoHaloOuro) end
+end)
+
+diamanteButton.MouseButton1Click:Connect(function()
+    AUTO_HALO_DIAMANTE_ATIVO = not AUTO_HALO_DIAMANTE_ATIVO
+    diamanteStatus.Text = AUTO_HALO_DIAMANTE_ATIVO and "ON" or "OFF"
+    diamanteStatus.BackgroundColor3 = AUTO_HALO_DIAMANTE_ATIVO and Color3.fromRGB(50,200,50) or Color3.fromRGB(200,50,50)
+    if AUTO_HALO_DIAMANTE_ATIVO then task.spawn(autoHaloDiamante) end
+end)
+
+exchangeButton.MouseButton1Click:Connect(function()
+    AUTO_EXCHANGE_HALO_ATIVO = not AUTO_EXCHANGE_HALO_ATIVO
+    exchangeStatus.Text = AUTO_EXCHANGE_HALO_ATIVO and "ON" or "OFF"
+    exchangeStatus.BackgroundColor3 = AUTO_EXCHANGE_HALO_ATIVO and Color3.fromRGB(50,200,50) or Color3.fromRGB(200,50,50)
+    if AUTO_EXCHANGE_HALO_ATIVO then task.spawn(autoExchangeHalo) end
+end)
+
+-- Inicializa aba Farm
 switchTab("Farm")
 
-print("✅ HUB DiuaryOG v3.2 carregado com sucesso! (Full DMG substituído pela sua versão)")
+print("✅DiuaryOG carregado com sucesso!")
