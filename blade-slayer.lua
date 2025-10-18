@@ -734,15 +734,17 @@ respirationDelayInput.FocusLost:Connect(function()
     end
 end)
 
--- DMG
+-- DMG (OTIMIZADO - SEM LAG)
 do
     local SKILL_ID = 200616
     local HARM_INDEX = 15
     local autoFireEnabled = false
     local autoFireRunning = false
     local delayValue = 0.0001
+    local MAX_HEROES = 10 -- Limite de pets para evitar lag
+    local lastCleanup = tick()
 
-    local dmgButton, dmgStatus, dmgStroke = createButton("DMG Auto Fire", "⚔️", skillsContainer, 220)
+    local dmgButton, dmgStatus, dmgStroke = createButton("DMG", "⚔️", skillsContainer, 220)
 
     local dmgDelayLabel = Instance.new("TextLabel", skillsContainer)
     dmgDelayLabel.Size = UDim2.new(0,150,0,20)
@@ -780,6 +782,20 @@ do
         return v
     end
 
+    -- Limpa GUIDs antigos a cada 60 segundos
+    local function cleanupHeroes()
+        if tick() - lastCleanup > 60 then
+            local count = 0
+            for _ in pairs(detectedHeroes) do count = count + 1 end
+            
+            if count > MAX_HEROES then
+                detectedHeroes = {} -- Limpa tudo e reconstrói
+                print("🧹 DMG: Cache de pets limpo (" .. count .. " removidos)")
+            end
+            lastCleanup = tick()
+        end
+    end
+
     local function scanRemoteEvents()
         if not remotes then return end
         for _,child in ipairs(remotes:GetChildren()) do
@@ -790,7 +806,8 @@ do
                         if type(args)=="table" then
                             local data = args[1]
                             if type(data)=="table" and data.heroGuid then
-                                detectedHeroes[data.heroGuid] = true
+                                -- Adiciona timestamp para controle
+                                detectedHeroes[data.heroGuid] = tick()
                             end
                         end
                     end)
@@ -810,9 +827,21 @@ do
     local function autoFireLoop()
         if autoFireRunning then return end
         autoFireRunning = true
+        
         while autoFireEnabled do
             local delayTime = clampDelay()
-            for guid,_ in pairs(detectedHeroes) do
+            
+            -- Limpa cache periodicamente
+            cleanupHeroes()
+            
+            -- Converte para array para evitar problemas de iteração
+            local heroList = {}
+            for guid, _ in pairs(detectedHeroes) do
+                table.insert(heroList, guid)
+            end
+            
+            -- Processa apenas os pets ativos
+            for _, guid in ipairs(heroList) do
                 pcall(function()
                     if heroSkillRemote then
                         heroSkillRemote:FireServer({
@@ -824,6 +853,7 @@ do
                     end
                 end)
             end
+            
             task.wait(delayTime)
         end
         autoFireRunning = false
@@ -835,10 +865,12 @@ do
         if autoFireEnabled then
             TweenService:Create(dmgStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50,200,100)}):Play()
             TweenService:Create(dmgStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(40,180,80)}):Play()
+            print("⚔️ DMG Auto Fire ativado!")
             task.spawn(autoFireLoop)
         else
             TweenService:Create(dmgStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,60,80)}):Play()
             TweenService:Create(dmgStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(180,40,60)}):Play()
+            print("⚔️ DMG Auto Fire desativado!")
         end
     end)
 end
