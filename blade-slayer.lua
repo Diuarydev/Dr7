@@ -734,21 +734,21 @@ respirationDelayInput.FocusLost:Connect(function()
     end
 end)
 
--- DMG (OTIMIZADO - SEM LAG)
+-- DMG (CAPTURA APENAS SEUS PETS)
 do
     local SKILL_ID = 200616
     local HARM_INDEX = 15
     local autoFireEnabled = false
     local autoFireRunning = false
     local delayValue = 0.0001
-    local MAX_HEROES = 10 -- Limite de pets para evitar lag
-    local lastCleanup = tick()
+    local MAX_HEROES = 5
+    local detectionOrder = {}
 
-    local dmgButton, dmgStatus, dmgStroke = createButton("DMG", "⚔️", skillsContainer, 220)
+    local dmgButton, dmgStatus, dmgStroke = createButton("DMG", "⚔️", skillsContainer, 150)
 
     local dmgDelayLabel = Instance.new("TextLabel", skillsContainer)
     dmgDelayLabel.Size = UDim2.new(0,150,0,20)
-    dmgDelayLabel.Position = UDim2.new(0,15,0,285)
+    dmgDelayLabel.Position = UDim2.new(0,15,0,215)
     dmgDelayLabel.BackgroundTransparency = 1
     dmgDelayLabel.TextColor3 = Color3.fromRGB(150,170,200)
     dmgDelayLabel.TextSize = 12
@@ -758,7 +758,7 @@ do
 
     local dmgDelayBox = Instance.new("TextBox", skillsContainer)
     dmgDelayBox.Size = UDim2.new(0,440,0,40)
-    dmgDelayBox.Position = UDim2.new(0,15,0,310)
+    dmgDelayBox.Position = UDim2.new(0,15,0,240)
     dmgDelayBox.BackgroundColor3 = Color3.fromRGB(25,25,35)
     dmgDelayBox.Text = tostring(delayValue)
     dmgDelayBox.PlaceholderText = "0.0001 - 5.00"
@@ -782,47 +782,55 @@ do
         return v
     end
 
-    -- Limpa GUIDs antigos a cada 60 segundos
-    local function cleanupHeroes()
-        if tick() - lastCleanup > 60 then
-            local count = 0
-            for _ in pairs(detectedHeroes) do count = count + 1 end
+    local function manageHeroLimit(newGuid)
+        local count = 0
+        for _ in pairs(detectedHeroes) do count = count + 1 end
+        
+        if count >= MAX_HEROES then
+            local oldestGuid = detectionOrder[1]
+            if oldestGuid then
+                detectedHeroes[oldestGuid] = nil
+                table.remove(detectionOrder, 1)
+                print("🔄 DMG: Pet antigo removido, novo pet adicionado!")
+            end
+        end
+        
+        detectedHeroes[newGuid] = tick()
+        table.insert(detectionOrder, newGuid)
+        
+        local count2 = 0
+        for _ in pairs(detectedHeroes) do count2 = count2 + 1 end
+        print("✅ DMG: Pet detectado (" .. count2 .. "/5) - GUID: " .. string.sub(newGuid, 1, 8) .. "...")
+    end
+
+    -- Hook que intercepta APENAS quando VOCÊ usa o remote
+    pcall(function()
+        local oldNamecall
+        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+            local method = getnamecallmethod()
+            local args = {...}
             
-            if count > MAX_HEROES then
-                detectedHeroes = {} -- Limpa tudo e reconstrói
-                print("🧹 DMG: Cache de pets limpo (" .. count .. " removidos)")
+            -- Captura quando VOCÊ usa a skill do pet
+            if self == heroSkillRemote and method == "FireServer" then
+                local data = args[1]
+                if type(data) == "table" and data.heroGuid then
+                    local guid = data.heroGuid
+                    
+                    -- Se não existe ainda, adiciona
+                    if not detectedHeroes[guid] then
+                        manageHeroLimit(guid)
+                    else
+                        -- Atualiza timestamp
+                        detectedHeroes[guid] = tick()
+                    end
+                end
             end
-            lastCleanup = tick()
-        end
-    end
-
-    local function scanRemoteEvents()
-        if not remotes then return end
-        for _,child in ipairs(remotes:GetChildren()) do
-            if child:IsA("RemoteEvent") then
-                pcall(function()
-                    child.OnClientEvent:Connect(function(...)
-                        local args = {...}
-                        if type(args)=="table" then
-                            local data = args[1]
-                            if type(data)=="table" and data.heroGuid then
-                                -- Adiciona timestamp para controle
-                                detectedHeroes[data.heroGuid] = tick()
-                            end
-                        end
-                    end)
-                end)
-            end
-        end
-    end
-
-    pcall(scanRemoteEvents)
-    if remotes then
-        remotes.ChildAdded:Connect(function()
-            task.wait(0.25)
-            pcall(scanRemoteEvents)
+            
+            return oldNamecall(self, ...)
         end)
-    end
+        
+        print("🔍 DMG: Sistema ativo! Use seus pets para detectá-los.")
+    end)
 
     local function autoFireLoop()
         if autoFireRunning then return end
@@ -831,16 +839,13 @@ do
         while autoFireEnabled do
             local delayTime = clampDelay()
             
-            -- Limpa cache periodicamente
-            cleanupHeroes()
-            
-            -- Converte para array para evitar problemas de iteração
+            -- Converte para lista
             local heroList = {}
             for guid, _ in pairs(detectedHeroes) do
                 table.insert(heroList, guid)
             end
             
-            -- Processa apenas os pets ativos
+            -- Envia para todos os pets detectados
             for _, guid in ipairs(heroList) do
                 pcall(function()
                     if heroSkillRemote then
@@ -865,12 +870,21 @@ do
         if autoFireEnabled then
             TweenService:Create(dmgStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50,200,100)}):Play()
             TweenService:Create(dmgStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(40,180,80)}):Play()
-            print("⚔️ DMG Auto Fire ativado!")
+            print("⚔️ DMG ativado!")
+            
+            local count = 0
+            for _ in pairs(detectedHeroes) do count = count + 1 end
+            if count == 0 then
+                print("⚠️ Use seus pets para detectá-los automaticamente!")
+            else
+                print("✅ " .. count .. " pet(s) detectado(s)!")
+            end
+            
             task.spawn(autoFireLoop)
         else
             TweenService:Create(dmgStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,60,80)}):Play()
             TweenService:Create(dmgStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(180,40,60)}):Play()
-            print("⚔️ DMG Auto Fire desativado!")
+            print("⚔️ DMG desativado!")
         end
     end)
 end
@@ -1317,4 +1331,4 @@ end)
 -- Inicializa
 switchTab("Farm")
 
-print("✅ Diuary Hub v3.2 Premium carregado com sucesso!")
+print("Diuary Hub Premium carregado com sucesso!")
