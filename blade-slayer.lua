@@ -1,4 +1,4 @@
--- HUB DIUARYOG PROFISSIONAL v3.2 - Layout Premium
+-- HUB DIUARYOG PROFISSIONAL v3.3 - Layout Premium Mobile
 -- By DiuaryOG 💙
 
 local Players = game:GetService("Players")
@@ -21,6 +21,7 @@ local rerollHaloRemote = remotes:FindFirstChild("RerollHalo")
 local exchangeHaloRemote = remotes:FindFirstChild("ExchangeHaloDrawItem")
 local useOrnamentRemote = remotes:FindFirstChild("UseOrnament")
 local heroSkillRemote = remotes:FindFirstChild("HeroSkillHarm")
+local PotionMergeRemote = remotes:FindFirstChild("PotionMerge")
 
 -- CONFIG
 local ORNAMENT_ID = 400002
@@ -34,7 +35,6 @@ local KEYS_VALIDAS = { "luh", "fifa" }
 _G.AUTO_CLICK_ATIVO = false
 _G.AUTO_REBORN_ATIVO = false
 _G.AUTO_OPEN_ATIVO = false
-_G.AUTO_REROLL_ATIVO = false
 _G.AUTO_RESPIRATION_SKILL_ATIVO = false
 _G.AUTO_HALO_BRONZE_ATIVO = false
 _G.AUTO_HALO_OURO_ATIVO = false
@@ -46,6 +46,14 @@ local ORNAMENTS = {
     DMG = { ornamentId = 410028, machineId = 400005 },
     Power = { ornamentId = 410026, machineId = 400005 },
     Lucky = { ornamentId = 410025, machineId = 400005 }
+}
+
+-- Configuração dos itens de reroll individual
+local itensReroll = {
+    {nome="MÁSCARA", id=400001, girando=false},
+    {nome="MOCHILA", id=400003, girando=false},
+    {nome="MARCA", id=400002, girando=false},
+    {nome="TRILHA", id=400004, girando=false},
 }
 
 -- FLAGS E ESTADOS
@@ -212,10 +220,10 @@ screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 999999
 screenGui.Parent = playerGui
 
--- Floating button
+-- Floating button reduzido para mobile
 local floatingButton = Instance.new("TextButton", screenGui)
-floatingButton.Size = UDim2.new(0, 70, 0, 70)
-floatingButton.Position = UDim2.new(0, 25, 0.5, -35)
+floatingButton.Size = UDim2.new(0, 60, 0, 60)
+floatingButton.Position = UDim2.new(0, 20, 0.5, -30)
 floatingButton.BackgroundColor3 = Color3.fromRGB(25,25,35)
 floatingButton.BorderSizePixel = 0
 floatingButton.Text = ""
@@ -227,7 +235,7 @@ floatingCorner.CornerRadius = UDim.new(1,0)
 
 local floatingStroke = Instance.new("UIStroke", floatingButton)
 floatingStroke.Color = Color3.fromRGB(80,140,255)
-floatingStroke.Thickness = 3
+floatingStroke.Thickness = 2.5
 floatingStroke.Transparency = 0.3
 
 local floatingIcon = Instance.new("TextLabel", floatingButton)
@@ -235,13 +243,13 @@ floatingIcon.Size = UDim2.new(1,0,1,0)
 floatingIcon.BackgroundTransparency = 1
 floatingIcon.Text = "🥀"
 floatingIcon.TextColor3 = Color3.fromRGB(150,200,255)
-floatingIcon.TextSize = 35
+floatingIcon.TextSize = 28
 floatingIcon.Font = Enum.Font.GothamBold
 
 -- Pulse animation
 task.spawn(function()
     while task.wait() do
-        TweenService:Create(floatingButton, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0,75,0,75)}):Play()
+        TweenService:Create(floatingButton, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0,65,0,65)}):Play()
         task.wait(1.5)
     end
 end)
@@ -275,17 +283,17 @@ do
     end)
 end
 
--- Main hub frame
+-- Main hub frame reduzido para mobile (500x420)
 local hubFrame = Instance.new("Frame", screenGui)
-hubFrame.Size = UDim2.new(0, 650, 0, 480)
-hubFrame.Position = UDim2.new(0.5, -325, 0.5, -240)
+hubFrame.Size = UDim2.new(0, 500, 0, 420)
+hubFrame.Position = UDim2.new(0.5, -250, 0.5, -210)
 hubFrame.BackgroundColor3 = Color3.fromRGB(15,15,20)
 hubFrame.BorderSizePixel = 0
 hubFrame.Visible = false
 hubFrame.ZIndex = 100000
 
 local hubCorner = Instance.new("UICorner", hubFrame)
-hubCorner.CornerRadius = UDim.new(0,20)
+hubCorner.CornerRadius = UDim.new(0,18)
 
 local hubStroke = Instance.new("UIStroke", hubFrame)
 hubStroke.Color = Color3.fromRGB(80,140,255)
@@ -294,23 +302,23 @@ hubStroke.Transparency = 0.6
 
 -- Accent line
 local accentLine = Instance.new("Frame", hubFrame)
-accentLine.Size = UDim2.new(1,0,0,3)
+accentLine.Size = UDim2.new(1,0,0,2)
 accentLine.Position = UDim2.new(0,0,0,0)
 accentLine.BackgroundColor3 = Color3.fromRGB(80,140,255)
 accentLine.BorderSizePixel = 0
 
 local accentCorner = Instance.new("UICorner", accentLine)
-accentCorner.CornerRadius = UDim.new(0,20)
+accentCorner.CornerRadius = UDim.new(0,18)
 
--- Header
+-- Header reduzido
 local header = Instance.new("Frame", hubFrame)
-header.Size = UDim2.new(1,0,0,65)
+header.Size = UDim2.new(1,0,0,55)
 header.Position = UDim2.new(0,0,0,0)
 header.BackgroundColor3 = Color3.fromRGB(20,20,28)
 header.BorderSizePixel = 0
 
 local headerCorner = Instance.new("UICorner", header)
-headerCorner.CornerRadius = UDim.new(0,20)
+headerCorner.CornerRadius = UDim.new(0,18)
 
 local headerGradient = Instance.new("UIGradient", header)
 headerGradient.Color = ColorSequence.new{
@@ -320,20 +328,20 @@ headerGradient.Color = ColorSequence.new{
 headerGradient.Rotation = 90
 
 local logoIcon = Instance.new("TextLabel", header)
-logoIcon.Size = UDim2.new(0,50,0,50)
-logoIcon.Position = UDim2.new(0,20,0,7)
+logoIcon.Size = UDim2.new(0,40,0,40)
+logoIcon.Position = UDim2.new(0,15,0,7)
 logoIcon.BackgroundTransparency = 1
 logoIcon.Text = "🥀"
-logoIcon.TextSize = 32
+logoIcon.TextSize = 26
 logoIcon.Font = Enum.Font.GothamBold
 
 local title = Instance.new("TextLabel", header)
-title.Size = UDim2.new(0,300,0,30)
-title.Position = UDim2.new(0,75,0,10)
+title.Size = UDim2.new(0,250,0,25)
+title.Position = UDim2.new(0,60,0,8)
 title.BackgroundTransparency = 1
 title.Text = "DIUARY HUB"
 title.TextColor3 = Color3.fromRGB(180,220,255)
-title.TextSize = 24
+title.TextSize = 20
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -344,29 +352,29 @@ titleGradient.Color = ColorSequence.new{
 }
 
 local version = Instance.new("TextLabel", header)
-version.Size = UDim2.new(0,100,0,18)
-version.Position = UDim2.new(0,75,0,40)
+version.Size = UDim2.new(0,100,0,16)
+version.Position = UDim2.new(0,60,0,33)
 version.BackgroundTransparency = 1
 version.Text = "vivian"
 version.TextColor3 = Color3.fromRGB(100,120,150)
-version.TextSize = 10
+version.TextSize = 9
 version.Font = Enum.Font.GothamMedium
 version.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Close button
 local closeBtn = Instance.new("TextButton", header)
-closeBtn.Size = UDim2.new(0,45,0,45)
-closeBtn.Position = UDim2.new(1, -60, 0, 10)
+closeBtn.Size = UDim2.new(0,38,0,38)
+closeBtn.Position = UDim2.new(1, -48, 0, 8)
 closeBtn.BackgroundColor3 = Color3.fromRGB(40,40,55)
 closeBtn.Text = "✕"
 closeBtn.TextColor3 = Color3.fromRGB(255,100,120)
 closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 22
+closeBtn.TextSize = 18
 closeBtn.BorderSizePixel = 0
 closeBtn.AutoButtonColor = false
 
 local closeCorner = Instance.new("UICorner", closeBtn)
-closeCorner.CornerRadius = UDim.new(0,12)
+closeCorner.CornerRadius = UDim.new(0,10)
 
 local closeStroke = Instance.new("UIStroke", closeBtn)
 closeStroke.Color = Color3.fromRGB(80,80,100)
@@ -386,8 +394,8 @@ closeBtn.MouseButton1Click:Connect(function()
     TweenService:Create(hubFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0), Position = UDim2.new(0.5,0,0.5,0)}):Play()
     task.wait(0.3)
     hubFrame.Visible = false
-    hubFrame.Size = UDim2.new(0, 650, 0, 480)
-    hubFrame.Position = UDim2.new(0.5, -325, 0.5, -240)
+    hubFrame.Size = UDim2.new(0, 500, 0, 420)
+    hubFrame.Position = UDim2.new(0.5, -250, 0.5, -210)
     floatingButton.Visible = true
 end)
 
@@ -395,27 +403,27 @@ floatingButton.MouseButton1Click:Connect(function()
     hubFrame.Visible = true
     hubFrame.Size = UDim2.new(0,0,0,0)
     hubFrame.Position = UDim2.new(0.5,0,0.5,0)
-    TweenService:Create(hubFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 650, 0, 480), Position = UDim2.new(0.5, -325, 0.5, -240)}):Play()
+    TweenService:Create(hubFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 500, 0, 420), Position = UDim2.new(0.5, -250, 0.5, -210)}):Play()
     floatingButton.Visible = false
 end)
 
--- Sidebar
+-- Sidebar reduzido
 local sidebar = Instance.new("Frame", hubFrame)
-sidebar.Size = UDim2.new(0,150,1,-75)
-sidebar.Position = UDim2.new(0,10,0,70)
+sidebar.Size = UDim2.new(0,120,1,-65)
+sidebar.Position = UDim2.new(0,8,0,60)
 sidebar.BackgroundColor3 = Color3.fromRGB(20,20,28)
 sidebar.BorderSizePixel = 0
 
 local sidebarCorner = Instance.new("UICorner", sidebar)
-sidebarCorner.CornerRadius = UDim.new(0,15)
+sidebarCorner.CornerRadius = UDim.new(0,12)
 
 local sidebarStroke = Instance.new("UIStroke", sidebar)
 sidebarStroke.Color = Color3.fromRGB(40,40,55)
 sidebarStroke.Thickness = 1
 
 local contentArea = Instance.new("Frame", hubFrame)
-contentArea.Size = UDim2.new(1, -180, 1, -85)
-contentArea.Position = UDim2.new(0,170,0,75)
+contentArea.Size = UDim2.new(1, -140, 1, -73)
+contentArea.Position = UDim2.new(0,135,0,63)
 contentArea.BackgroundTransparency = 1
 
 -- Drag hub
@@ -447,11 +455,11 @@ do
     end)
 end
 
--- Tab button creator
+-- Tab button creator reduzido
 local function createTabButton(text, icon, yPos)
     local btn = Instance.new("TextButton", sidebar)
-    btn.Size = UDim2.new(0,130,0,50)
-    btn.Position = UDim2.new(0,10,0,yPos)
+    btn.Size = UDim2.new(0,105,0,42)
+    btn.Position = UDim2.new(0,7,0,yPos)
     btn.BackgroundColor3 = Color3.fromRGB(25,25,35)
     btn.TextColor3 = Color3.fromRGB(120,140,180)
     btn.Text = ""
@@ -460,7 +468,7 @@ local function createTabButton(text, icon, yPos)
     btn.AutoButtonColor = false
 
     local corner = Instance.new("UICorner", btn)
-    corner.CornerRadius = UDim.new(0,12)
+    corner.CornerRadius = UDim.new(0,10)
 
     local stroke = Instance.new("UIStroke", btn)
     stroke.Color = Color3.fromRGB(40,40,55)
@@ -468,20 +476,20 @@ local function createTabButton(text, icon, yPos)
     stroke.Transparency = 0.5
 
     local iconLabel = Instance.new("TextLabel", btn)
-    iconLabel.Size = UDim2.new(0,35,0,35)
-    iconLabel.Position = UDim2.new(0,10,0,7)
+    iconLabel.Size = UDim2.new(0,28,0,28)
+    iconLabel.Position = UDim2.new(0,8,0,7)
     iconLabel.BackgroundTransparency = 1
     iconLabel.Text = icon
-    iconLabel.TextSize = 20
+    iconLabel.TextSize = 16
     iconLabel.Font = Enum.Font.GothamBold
 
     local textLabel = Instance.new("TextLabel", btn)
-    textLabel.Size = UDim2.new(0,70,0,50)
-    textLabel.Position = UDim2.new(0,50,0,0)
+    textLabel.Size = UDim2.new(0,60,0,42)
+    textLabel.Position = UDim2.new(0,40,0,0)
     textLabel.BackgroundTransparency = 1
     textLabel.Text = text
     textLabel.TextColor3 = Color3.fromRGB(120,140,180)
-    textLabel.TextSize = 13
+    textLabel.TextSize = 11
     textLabel.Font = Enum.Font.GothamBold
     textLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -500,12 +508,13 @@ local function createTabButton(text, icon, yPos)
     return btn, iconLabel, textLabel, stroke
 end
 
--- Create tabs
-local farmTab, farmIcon, farmText, farmStroke = createTabButton("Farm","🎮",10)
-local marcaTab, marcaIcon, marcaText, marcaStroke = createTabButton("Marca","🎯",70)
-local skillsTab, skillsIcon, skillsText, skillsStroke = createTabButton("Skills","⚡",130)
-local auraTab, auraIcon, auraText, auraStroke = createTabButton("Aura","✨",190)
-local talismaTab, talismaIcon, talismaText, talismaStroke = createTabButton("Talismã","💎",250)
+-- Create tabs - adicionada nova aba Potion
+local farmTab, farmIcon, farmText, farmStroke = createTabButton("Farm","🎮",8)
+local marcaTab, marcaIcon, marcaText, marcaStroke = createTabButton("Marca","🎯",56)
+local skillsTab, skillsIcon, skillsText, skillsStroke = createTabButton("Skills","⚡",104)
+local auraTab, auraIcon, auraText, auraStroke = createTabButton("Aura","✨",152)
+local talismaTab, talismaIcon, talismaText, talismaStroke = createTabButton("Talismã","💎",200)
+local fusePotionTab, fusePotionIcon, fusePotionText, fusePotionStroke = createTabButton("Potion","🧪",248)
 
 -- Create containers
 local farmContainer = Instance.new("Frame", contentArea)
@@ -533,7 +542,13 @@ talismaContainer.Size = UDim2.new(1,0,1,0)
 talismaContainer.BackgroundTransparency = 1
 talismaContainer.Visible = false
 
--- Switch tabs
+-- Novo container para FusePotion
+local fusePotionContainer = Instance.new("Frame", contentArea)
+fusePotionContainer.Size = UDim2.new(1,0,1,0)
+fusePotionContainer.BackgroundTransparency = 1
+fusePotionContainer.Visible = false
+
+-- Switch tabs atualizado com nova aba
 local function switchTab(tabName)
     ABA_ATUAL = tabName
     local tabs = {
@@ -541,7 +556,8 @@ local function switchTab(tabName)
         {btn = marcaTab, icon = marcaIcon, text = marcaText, stroke = marcaStroke},
         {btn = skillsTab, icon = skillsIcon, text = skillsText, stroke = skillsStroke},
         {btn = auraTab, icon = auraIcon, text = auraText, stroke = auraStroke},
-        {btn = talismaTab, icon = talismaIcon, text = talismaText, stroke = talismaStroke}
+        {btn = talismaTab, icon = talismaIcon, text = talismaText, stroke = talismaStroke},
+        {btn = fusePotionTab, icon = fusePotionIcon, text = fusePotionText, stroke = fusePotionStroke}
     }
     
     for _, t in ipairs(tabs) do
@@ -555,6 +571,7 @@ local function switchTab(tabName)
     skillsContainer.Visible = false
     auraContainer.Visible = false
     talismaContainer.Visible = false
+    fusePotionContainer.Visible = false
 
     if tabName == "Farm" then
         TweenService:Create(farmTab, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80,140,255)}):Play()
@@ -586,6 +603,12 @@ local function switchTab(tabName)
         talismaStroke.Transparency = 0
         talismaStroke.Color = Color3.fromRGB(100,160,255)
         talismaContainer.Visible = true
+    elseif tabName == "FusePotion" then
+        TweenService:Create(fusePotionTab, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80,140,255)}):Play()
+        TweenService:Create(fusePotionText, TweenInfo.new(0.2), {TextColor3 = Color3.new(1,1,1)}):Play()
+        fusePotionStroke.Transparency = 0
+        fusePotionStroke.Color = Color3.fromRGB(100,160,255)
+        fusePotionContainer.Visible = true
     end
 end
 
@@ -594,19 +617,20 @@ marcaTab.MouseButton1Click:Connect(function() switchTab("Marca") end)
 skillsTab.MouseButton1Click:Connect(function() switchTab("Skills") end)
 auraTab.MouseButton1Click:Connect(function() switchTab("Aura") end)
 talismaTab.MouseButton1Click:Connect(function() switchTab("Talismã") end)
+fusePotionTab.MouseButton1Click:Connect(function() switchTab("FusePotion") end)
 
--- Button creator
+-- Button creator reduzido
 local function createButton(text, icon, parent, yPos)
     local btn = Instance.new("TextButton", parent)
-    btn.Size = UDim2.new(0,440,0,55)
-    btn.Position = UDim2.new(0,15,0,yPos)
+    btn.Size = UDim2.new(0,345,0,45)
+    btn.Position = UDim2.new(0,10,0,yPos)
     btn.BackgroundColor3 = Color3.fromRGB(25,25,35)
     btn.Text = ""
     btn.BorderSizePixel = 0
     btn.AutoButtonColor = false
 
     local corner = Instance.new("UICorner", btn)
-    corner.CornerRadius = UDim.new(0,14)
+    corner.CornerRadius = UDim.new(0,12)
 
     local stroke = Instance.new("UIStroke", btn)
     stroke.Color = Color3.fromRGB(50,50,70)
@@ -620,35 +644,35 @@ local function createButton(text, icon, parent, yPos)
     gradient.Rotation = 45
 
     local iconLabel = Instance.new("TextLabel", btn)
-    iconLabel.Size = UDim2.new(0,45,0,45)
-    iconLabel.Position = UDim2.new(0,12,0,5)
+    iconLabel.Size = UDim2.new(0,38,0,38)
+    iconLabel.Position = UDim2.new(0,8,0,3)
     iconLabel.BackgroundTransparency = 1
     iconLabel.Text = icon
-    iconLabel.TextSize = 24
+    iconLabel.TextSize = 20
     iconLabel.Font = Enum.Font.GothamBold
 
     local textLabel = Instance.new("TextLabel", btn)
-    textLabel.Size = UDim2.new(0,250,0,55)
-    textLabel.Position = UDim2.new(0,65,0,0)
+    textLabel.Size = UDim2.new(0,200,0,45)
+    textLabel.Position = UDim2.new(0,50,0,0)
     textLabel.BackgroundTransparency = 1
     textLabel.Text = text
     textLabel.TextColor3 = Color3.fromRGB(180,200,230)
-    textLabel.TextSize = 15
+    textLabel.TextSize = 13
     textLabel.Font = Enum.Font.GothamBold
     textLabel.TextXAlignment = Enum.TextXAlignment.Left
 
     local status = Instance.new("TextLabel", btn)
-    status.Size = UDim2.new(0,80,0,30)
-    status.Position = UDim2.new(1,-95,0.5,-15)
+    status.Size = UDim2.new(0,65,0,26)
+    status.Position = UDim2.new(1,-75,0.5,-13)
     status.BackgroundColor3 = Color3.fromRGB(220,60,80)
     status.TextColor3 = Color3.new(1,1,1)
     status.Text = "OFF"
-    status.TextSize = 13
+    status.TextSize = 11
     status.Font = Enum.Font.GothamBold
     status.BorderSizePixel = 0
 
     local statusCorner = Instance.new("UICorner", status)
-    statusCorner.CornerRadius = UDim.new(0,8)
+    statusCorner.CornerRadius = UDim.new(0,7)
 
     local statusStroke = Instance.new("UIStroke", status)
     statusStroke.Color = Color3.fromRGB(180,40,60)
@@ -668,53 +692,139 @@ local function createButton(text, icon, parent, yPos)
 end
 
 -- ABA FARM
-local clickButton, clickStatus, clickStroke = createButton("AutoClick", "🖱️", farmContainer, 10)
-local rebornButton, rebornStatus, rebornStroke = createButton("AutoReborn", "🔄", farmContainer, 75)
-local openButton, openStatus, openStroke = createButton("AutoOpen Baús", "📦", farmContainer, 140)
+local clickButton, clickStatus, clickStroke = createButton("AutoClick", "🖱️", farmContainer, 8)
+local rebornButton, rebornStatus, rebornStroke = createButton("AutoReborn", "🔄", farmContainer, 60)
+local openButton, openStatus, openStroke = createButton("AutoOpen Baús", "📦", farmContainer, 112)
 
--- ABA MARCA
-local autoRerollButton, autoRerollStatus, autoRerollStroke = createButton("AutoReroll Marca", "🎯", marcaContainer, 10)
+-- ABA MARCA - Sistema de reroll individual por item (removido AutoReroll antigo)
+local marcaInfo = Instance.new("TextLabel", marcaContainer)
+marcaInfo.Size = UDim2.new(0,345,0,40)
+marcaInfo.Position = UDim2.new(0,10,0,8)
+marcaInfo.BackgroundColor3 = Color3.fromRGB(25,25,35)
+marcaInfo.TextColor3 = Color3.fromRGB(255,215,100)
+marcaInfo.TextSize = 11
+marcaInfo.Font = Enum.Font.GothamBold
+marcaInfo.Text = "🎯 SISTEMA DE REROLL POR ITEM"
 
-local foundLabel = Instance.new("TextLabel", marcaContainer)
-foundLabel.Size = UDim2.new(0,440,0,70)
-foundLabel.Position = UDim2.new(0,15,0,75)
-foundLabel.BackgroundColor3 = Color3.fromRGB(25,25,35)
-foundLabel.TextColor3 = Color3.fromRGB(255,215,100)
-foundLabel.TextSize = 13
-foundLabel.Font = Enum.Font.GothamMedium
-foundLabel.Text = "🎯 Sistema de Reroll Automático\n\nClique no botão acima para iniciar o reroll contínuo."
-foundLabel.TextWrapped = true
+local marcaInfoCorner = Instance.new("UICorner", marcaInfo)
+marcaInfoCorner.CornerRadius = UDim.new(0,12)
 
-local foundCorner = Instance.new("UICorner", foundLabel)
-foundCorner.CornerRadius = UDim.new(0,14)
+local marcaInfoStroke = Instance.new("UIStroke", marcaInfo)
+marcaInfoStroke.Color = Color3.fromRGB(80,80,100)
+marcaInfoStroke.Thickness = 1
 
-local foundStroke = Instance.new("UIStroke", foundLabel)
-foundStroke.Color = Color3.fromRGB(80,80,100)
-foundStroke.Thickness = 1
+-- Funções de reroll individual
+local function iniciarLoop(item)
+    if item.girando then return end
+    item.girando = true
+    spawn(function()
+        while item.girando do
+            local ok, err = pcall(function()
+                if rerollRemote then
+                    rerollRemote:InvokeServer(item.id)
+                end
+            end)
+            if not ok then
+                warn("Erro "..item.nome..":", err)
+            end
+            wait(0.00001)
+        end
+    end)
+end
+
+local function pararLoop(item)
+    item.girando = false
+end
+
+-- Criar botões para cada item de reroll
+local yPosReroll = 55
+for _, item in ipairs(itensReroll) do
+    local btnIniciar = Instance.new("TextButton", marcaContainer)
+    btnIniciar.Size = UDim2.new(0,165,0,38)
+    btnIniciar.Position = UDim2.new(0,10,0,yPosReroll)
+    btnIniciar.BackgroundColor3 = Color3.fromRGB(25,25,35)
+    btnIniciar.Text = "▶ "..item.nome
+    btnIniciar.TextColor3 = Color3.fromRGB(100,255,150)
+    btnIniciar.Font = Enum.Font.GothamBold
+    btnIniciar.TextSize = 11
+    btnIniciar.BorderSizePixel = 0
+    btnIniciar.AutoButtonColor = false
+
+    local iniciarCorner = Instance.new("UICorner", btnIniciar)
+    iniciarCorner.CornerRadius = UDim.new(0,10)
+
+    local iniciarStroke = Instance.new("UIStroke", btnIniciar)
+    iniciarStroke.Color = Color3.fromRGB(50,200,100)
+    iniciarStroke.Thickness = 1.5
+
+    local btnParar = Instance.new("TextButton", marcaContainer)
+    btnParar.Size = UDim2.new(0,165,0,38)
+    btnParar.Position = UDim2.new(0,190,0,yPosReroll)
+    btnParar.BackgroundColor3 = Color3.fromRGB(25,25,35)
+    btnParar.Text = "⏸ PARAR"
+    btnParar.TextColor3 = Color3.fromRGB(255,100,120)
+    btnParar.Font = Enum.Font.GothamBold
+    btnParar.TextSize = 11
+    btnParar.BorderSizePixel = 0
+    btnParar.AutoButtonColor = false
+
+    local pararCorner = Instance.new("UICorner", btnParar)
+    pararCorner.CornerRadius = UDim.new(0,10)
+
+    local pararStroke = Instance.new("UIStroke", btnParar)
+    pararStroke.Color = Color3.fromRGB(220,60,80)
+    pararStroke.Thickness = 1.5
+
+    btnIniciar.MouseEnter:Connect(function()
+        TweenService:Create(btnIniciar, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35,35,50)}):Play()
+    end)
+    btnIniciar.MouseLeave:Connect(function()
+        TweenService:Create(btnIniciar, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25,25,35)}):Play()
+    end)
+
+    btnParar.MouseEnter:Connect(function()
+        TweenService:Create(btnParar, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35,35,50)}):Play()
+    end)
+    btnParar.MouseLeave:Connect(function()
+        TweenService:Create(btnParar, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25,25,35)}):Play()
+    end)
+
+    btnIniciar.MouseButton1Click:Connect(function() 
+        iniciarLoop(item)
+        print("✅ Reroll "..item.nome.." iniciado!")
+    end)
+    
+    btnParar.MouseButton1Click:Connect(function() 
+        pararLoop(item)
+        print("⏸ Reroll "..item.nome.." parado!")
+    end)
+
+    yPosReroll = yPosReroll + 45
+end
 
 -- ABA SKILLS
-local respirationSkillButton, respirationSkillStatus, respirationStroke = createButton("Respiration Skill", "☠️", skillsContainer, 10)
+local respirationSkillButton, respirationSkillStatus, respirationStroke = createButton("Respiration Skill", "☠️", skillsContainer, 8)
 
 local respirationDelayLabel = Instance.new("TextLabel", skillsContainer)
-respirationDelayLabel.Size = UDim2.new(0,150,0,20)
-respirationDelayLabel.Position = UDim2.new(0,15,0,75)
+respirationDelayLabel.Size = UDim2.new(0,150,0,18)
+respirationDelayLabel.Position = UDim2.new(0,10,0,60)
 respirationDelayLabel.BackgroundTransparency = 1
 respirationDelayLabel.TextColor3 = Color3.fromRGB(150,170,200)
-respirationDelayLabel.TextSize = 12
+respirationDelayLabel.TextSize = 10
 respirationDelayLabel.Font = Enum.Font.GothamBold
 respirationDelayLabel.Text = "⏱️ Delay (segundos):"
 respirationDelayLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 local respirationDelayInput = Instance.new("TextBox", skillsContainer)
-respirationDelayInput.Size = UDim2.new(0,440,0,40)
-respirationDelayInput.Position = UDim2.new(0,15,0,100)
+respirationDelayInput.Size = UDim2.new(0,345,0,35)
+respirationDelayInput.Position = UDim2.new(0,10,0,80)
 respirationDelayInput.BackgroundColor3 = Color3.fromRGB(25,25,35)
 respirationDelayInput.TextColor3 = Color3.new(1,1,1)
 respirationDelayInput.PlaceholderText = "0.01 - 5.00"
 respirationDelayInput.Text = tostring(RESPIRATION_SKILL_DELAY)
 respirationDelayInput.ClearTextOnFocus = false
 respirationDelayInput.Font = Enum.Font.GothamMedium
-respirationDelayInput.TextSize = 14
+respirationDelayInput.TextSize = 12
 respirationDelayInput.BorderSizePixel = 0
 
 local respInputCorner = Instance.new("UICorner", respirationDelayInput)
@@ -744,27 +854,27 @@ do
     local MAX_HEROES = 5
     local detectionOrder = {}
 
-    local dmgButton, dmgStatus, dmgStroke = createButton("DMG", "⚔️", skillsContainer, 150)
+    local dmgButton, dmgStatus, dmgStroke = createButton("DMG", "⚔️", skillsContainer, 125)
 
     local dmgDelayLabel = Instance.new("TextLabel", skillsContainer)
-    dmgDelayLabel.Size = UDim2.new(0,150,0,20)
-    dmgDelayLabel.Position = UDim2.new(0,15,0,215)
+    dmgDelayLabel.Size = UDim2.new(0,150,0,18)
+    dmgDelayLabel.Position = UDim2.new(0,10,0,177)
     dmgDelayLabel.BackgroundTransparency = 1
     dmgDelayLabel.TextColor3 = Color3.fromRGB(150,170,200)
-    dmgDelayLabel.TextSize = 12
+    dmgDelayLabel.TextSize = 10
     dmgDelayLabel.Font = Enum.Font.GothamBold
     dmgDelayLabel.Text = "⏱️ DMG Delay:"
     dmgDelayLabel.TextXAlignment = Enum.TextXAlignment.Left
 
     local dmgDelayBox = Instance.new("TextBox", skillsContainer)
-    dmgDelayBox.Size = UDim2.new(0,440,0,40)
-    dmgDelayBox.Position = UDim2.new(0,15,0,240)
+    dmgDelayBox.Size = UDim2.new(0,345,0,35)
+    dmgDelayBox.Position = UDim2.new(0,10,0,197)
     dmgDelayBox.BackgroundColor3 = Color3.fromRGB(25,25,35)
     dmgDelayBox.Text = tostring(delayValue)
     dmgDelayBox.PlaceholderText = "0.0001 - 5.00"
     dmgDelayBox.ClearTextOnFocus = false
     dmgDelayBox.Font = Enum.Font.GothamMedium
-    dmgDelayBox.TextSize = 14
+    dmgDelayBox.TextSize = 12
     dmgDelayBox.TextColor3 = Color3.new(1,1,1)
     dmgDelayBox.BorderSizePixel = 0
 
@@ -891,46 +1001,46 @@ end
 
 -- ABA AURA
 local haloInfo = Instance.new("TextLabel", auraContainer)
-haloInfo.Size = UDim2.new(0,440,0,50)
-haloInfo.Position = UDim2.new(0,15,0,10)
+haloInfo.Size = UDim2.new(0,345,0,40)
+haloInfo.Position = UDim2.new(0,10,0,8)
 haloInfo.BackgroundColor3 = Color3.fromRGB(25,25,35)
 haloInfo.TextColor3 = Color3.fromRGB(255,215,100)
-haloInfo.TextSize = 14
+haloInfo.TextSize = 12
 haloInfo.Font = Enum.Font.GothamBold
 haloInfo.Text = "✨ SISTEMA DE HALOS PREMIUM"
 
 local haloCorner = Instance.new("UICorner", haloInfo)
-haloCorner.CornerRadius = UDim.new(0,14)
+haloCorner.CornerRadius = UDim.new(0,12)
 
 local haloStroke = Instance.new("UIStroke", haloInfo)
 haloStroke.Color = Color3.fromRGB(80,80,100)
 haloStroke.Thickness = 1.5
 
-local bronzeButton, bronzeStatus, bronzeStroke = createButton("Reroll Bronze", "🥉", auraContainer, 70)
-local ouroButton, ouroStatus, ouroStroke = createButton("Reroll Ouro", "🥇", auraContainer, 135)
-local diamanteButton, diamanteStatus, diamanteStroke = createButton("Reroll Diamante", "💎", auraContainer, 200)
-local exchangeButton, exchangeStatus, exchangeStroke = createButton("Exchange Halo (Diamante)", "🎁", auraContainer, 265)
+local bronzeButton, bronzeStatus, bronzeStroke = createButton("Reroll Bronze", "🥉", auraContainer, 55)
+local ouroButton, ouroStatus, ouroStroke = createButton("Reroll Ouro", "🥇", auraContainer, 107)
+local diamanteButton, diamanteStatus, diamanteStroke = createButton("Reroll Diamante", "💎", auraContainer, 159)
+local exchangeButton, exchangeStatus, exchangeStroke = createButton("Exchange Halo (Diamante)", "🎁", auraContainer, 211)
 
 local exchangeDelayLabel = Instance.new("TextLabel", auraContainer)
-exchangeDelayLabel.Size = UDim2.new(0,150,0,20)
-exchangeDelayLabel.Position = UDim2.new(0,15,0,330)
+exchangeDelayLabel.Size = UDim2.new(0,150,0,18)
+exchangeDelayLabel.Position = UDim2.new(0,10,0,263)
 exchangeDelayLabel.BackgroundTransparency = 1
 exchangeDelayLabel.TextColor3 = Color3.fromRGB(150,170,200)
-exchangeDelayLabel.TextSize = 12
+exchangeDelayLabel.TextSize = 10
 exchangeDelayLabel.Font = Enum.Font.GothamBold
 exchangeDelayLabel.Text = "⏱️ Exchange Delay:"
 exchangeDelayLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 local exchangeDelayInput = Instance.new("TextBox", auraContainer)
-exchangeDelayInput.Size = UDim2.new(0,440,0,40)
-exchangeDelayInput.Position = UDim2.new(0,15,0,355)
+exchangeDelayInput.Size = UDim2.new(0,345,0,35)
+exchangeDelayInput.Position = UDim2.new(0,10,0,283)
 exchangeDelayInput.BackgroundColor3 = Color3.fromRGB(25,25,35)
 exchangeDelayInput.TextColor3 = Color3.new(1,1,1)
 exchangeDelayInput.PlaceholderText = "0.01 - 0.51"
 exchangeDelayInput.Text = string.format("%.2f", EXCHANGE_HALO_DELAY)
 exchangeDelayInput.ClearTextOnFocus = false
 exchangeDelayInput.Font = Enum.Font.GothamMedium
-exchangeDelayInput.TextSize = 14
+exchangeDelayInput.TextSize = 12
 exchangeDelayInput.BorderSizePixel = 0
 
 local exchInputCorner = Instance.new("UICorner", exchangeDelayInput)
@@ -952,17 +1062,17 @@ end)
 
 -- ABA TALISMÃ
 local talismaInfo = Instance.new("TextLabel", talismaContainer)
-talismaInfo.Size = UDim2.new(0,440,0,60)
-talismaInfo.Position = UDim2.new(0,15,0,10)
+talismaInfo.Size = UDim2.new(0,345,0,50)
+talismaInfo.Position = UDim2.new(0,10,0,8)
 talismaInfo.BackgroundColor3 = Color3.fromRGB(25,25,35)
 talismaInfo.TextColor3 = Color3.fromRGB(255,215,100)
-talismaInfo.TextSize = 13
+talismaInfo.TextSize = 11
 talismaInfo.Font = Enum.Font.GothamBold
 talismaInfo.Text = "💎 SISTEMA DE ORNAMENTOS\n\nSelecione um ornamento e clique em EQUIPAR"
 talismaInfo.TextWrapped = true
 
 local talismaInfoCorner = Instance.new("UICorner", talismaInfo)
-talismaInfoCorner.CornerRadius = UDim.new(0,14)
+talismaInfoCorner.CornerRadius = UDim.new(0,12)
 
 local talismaInfoStroke = Instance.new("UIStroke", talismaInfo)
 talismaInfoStroke.Color = Color3.fromRGB(80,80,100)
@@ -970,38 +1080,38 @@ talismaInfoStroke.Thickness = 1.5
 
 local ornamentButtons = {}
 do
-    local y = 80
+    local y = 65
     for name, cfg in pairs(ORNAMENTS) do
         local btn = Instance.new("TextButton", talismaContainer)
-        btn.Size = UDim2.new(0,440,0,50)
-        btn.Position = UDim2.new(0,15,0,y)
+        btn.Size = UDim2.new(0,345,0,42)
+        btn.Position = UDim2.new(0,10,0,y)
         btn.BackgroundColor3 = Color3.fromRGB(25,25,35)
         btn.Text = ""
         btn.BorderSizePixel = 0
         btn.AutoButtonColor = false
 
         local corner = Instance.new("UICorner", btn)
-        corner.CornerRadius = UDim.new(0,14)
+        corner.CornerRadius = UDim.new(0,12)
 
         local stroke = Instance.new("UIStroke", btn)
         stroke.Color = Color3.fromRGB(50,50,70)
         stroke.Thickness = 1.5
 
         local icon = Instance.new("TextLabel", btn)
-        icon.Size = UDim2.new(0,40,0,40)
-        icon.Position = UDim2.new(0,10,0,5)
+        icon.Size = UDim2.new(0,35,0,35)
+        icon.Position = UDim2.new(0,8,0,3)
         icon.BackgroundTransparency = 1
         icon.Text = "💎"
-        icon.TextSize = 22
+        icon.TextSize = 18
         icon.Font = Enum.Font.GothamBold
 
         local label = Instance.new("TextLabel", btn)
-        label.Size = UDim2.new(0,300,0,50)
-        label.Position = UDim2.new(0,60,0,0)
+        label.Size = UDim2.new(0,280,0,42)
+        label.Position = UDim2.new(0,50,0,0)
         label.BackgroundTransparency = 1
         label.Text = name
         label.TextColor3 = Color3.fromRGB(180,200,230)
-        label.TextSize = 16
+        label.TextSize = 14
         label.Font = Enum.Font.GothamBold
         label.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -1018,23 +1128,23 @@ do
         end)
 
         ornamentButtons[name] = { button = btn, stroke = stroke, cfg = cfg, label = label }
-        y = y + 60
+        y = y + 50
     end
 end
 
 local equipButton = Instance.new("TextButton", talismaContainer)
-equipButton.Size = UDim2.new(0,440,0,55)
-equipButton.Position = UDim2.new(0,15,0,280)
+equipButton.Size = UDim2.new(0,345,0,45)
+equipButton.Position = UDim2.new(0,10,0,220)
 equipButton.BackgroundColor3 = Color3.fromRGB(80,140,255)
 equipButton.TextColor3 = Color3.new(1,1,1)
 equipButton.Text = "⚡ EQUIPAR SELECIONADO"
 equipButton.Font = Enum.Font.GothamBold
-equipButton.TextSize = 16
+equipButton.TextSize = 14
 equipButton.BorderSizePixel = 0
 equipButton.AutoButtonColor = false
 
 local equipCorner = Instance.new("UICorner", equipButton)
-equipCorner.CornerRadius = UDim.new(0,14)
+equipCorner.CornerRadius = UDim.new(0,12)
 
 local equipStroke = Instance.new("UIStroke", equipButton)
 equipStroke.Color = Color3.fromRGB(100,160,255)
@@ -1049,12 +1159,12 @@ equipButton.MouseLeave:Connect(function()
 end)
 
 local talismaDesc = Instance.new("TextLabel", talismaContainer)
-talismaDesc.Size = UDim2.new(0,440,0,50)
-talismaDesc.Position = UDim2.new(0,15,0,345)
+talismaDesc.Size = UDim2.new(0,345,0,45)
+talismaDesc.Position = UDim2.new(0,10,0,272)
 talismaDesc.BackgroundTransparency = 1
 talismaDesc.TextColor3 = Color3.fromRGB(150,170,200)
 talismaDesc.Font = Enum.Font.GothamMedium
-talismaDesc.TextSize = 11
+talismaDesc.TextSize = 10
 talismaDesc.Text = "Selecione um ornamento acima e clique em EQUIPAR\n💎 DMG = Dano | ⚡ Power = Poder | 🍀 Lucky = Sorte"
 talismaDesc.TextWrapped = true
 
@@ -1094,6 +1204,116 @@ equipButton.MouseButton1Click:Connect(function()
     talismaDesc.Text = "✅ " .. ornamentSelecionado .. " equipado com sucesso!"
     talismaDesc.TextColor3 = Color3.fromRGB(100,255,150)
 end)
+
+-- ABA FUSEPOTION - Sistema de fusão de poções
+local fusePotionInfo = Instance.new("TextLabel", fusePotionContainer)
+fusePotionInfo.Size = UDim2.new(0,345,0,45)
+fusePotionInfo.Position = UDim2.new(0,10,0,8)
+fusePotionInfo.BackgroundColor3 = Color3.fromRGB(25,25,35)
+fusePotionInfo.TextColor3 = Color3.fromRGB(255,215,100)
+fusePotionInfo.TextSize = 11
+fusePotionInfo.Font = Enum.Font.GothamBold
+fusePotionInfo.Text = "🧪 SISTEMA DE FUSÃO DE POÇÕES\n\nClique nos botões para fundir poções"
+fusePotionInfo.TextWrapped = true
+
+local fusePotionInfoCorner = Instance.new("UICorner", fusePotionInfo)
+fusePotionInfoCorner.CornerRadius = UDim.new(0,12)
+
+local fusePotionInfoStroke = Instance.new("UIStroke", fusePotionInfo)
+fusePotionInfoStroke.Color = Color3.fromRGB(80,80,100)
+fusePotionInfoStroke.Thickness = 1
+
+-- Funções de fusão de poções
+local function mergePotions(ids, count)
+    for _, id in ipairs(ids) do
+        local args = {
+            {id = id, count = count or 5}
+        }
+        local ok, err = pcall(function()
+            if PotionMergeRemote then
+                PotionMergeRemote:InvokeServer(unpack(args))
+            end
+        end)
+        if not ok then
+            warn("Erro ao fundir poção ID "..id..":", err)
+        end
+    end
+end
+
+local function mergeSorte()
+    mergePotions({10050, 10307}, 5)
+    print("🍀 Poções de Sorte fundidas!")
+end
+
+local function mergePoder()
+    mergePotions({10052, 10309}, 5)
+    print("⚡ Poções de Poder fundidas!")
+end
+
+local function mergeDmg()
+    mergePotions({10051, 10308}, 5)
+    print("⚔️ Poções de DMG fundidas!")
+end
+
+local function mergeGold()
+    mergePotions({10053, 10310}, 5)
+    print("💰 Poções de Gold fundidas!")
+end
+
+-- Criar botões de fusão de poções
+local potionButtons = {
+    {name = "SORTE", icon = "🍀", callback = mergeSorte, yPos = 60},
+    {name = "PODER", icon = "⚡", callback = mergePoder, yPos = 112},
+    {name = "DMG", icon = "⚔️", callback = mergeDmg, yPos = 164},
+    {name = "GOLD", icon = "💰", callback = mergeGold, yPos = 216}
+}
+
+for _, potionData in ipairs(potionButtons) do
+    local btn = Instance.new("TextButton", fusePotionContainer)
+    btn.Size = UDim2.new(0,345,0,45)
+    btn.Position = UDim2.new(0,10,0,potionData.yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(25,25,35)
+    btn.Text = ""
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,12)
+
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = Color3.fromRGB(50,50,70)
+    stroke.Thickness = 1.5
+
+    local icon = Instance.new("TextLabel", btn)
+    icon.Size = UDim2.new(0,38,0,38)
+    icon.Position = UDim2.new(0,8,0,3)
+    icon.BackgroundTransparency = 1
+    icon.Text = potionData.icon
+    icon.TextSize = 20
+    icon.Font = Enum.Font.GothamBold
+
+    local label = Instance.new("TextLabel", btn)
+    label.Size = UDim2.new(0,280,0,45)
+    label.Position = UDim2.new(0,50,0,0)
+    label.BackgroundTransparency = 1
+    label.Text = "FUNDIR " .. potionData.name
+    label.TextColor3 = Color3.fromRGB(180,200,230)
+    label.TextSize = 13
+    label.Font = Enum.Font.GothamBold
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35,35,50)}):Play()
+        TweenService:Create(stroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(80,140,255)}):Play()
+    end)
+
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25,25,35)}):Play()
+        TweenService:Create(stroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(50,50,70)}):Play()
+    end)
+
+    btn.MouseButton1Click:Connect(potionData.callback)
+end
 
 -- FUNÇÕES DE AUTO
 local function autoClick()
@@ -1196,16 +1416,6 @@ local function autoExchangeHalo()
     setFlag("autoExchangeHalo", false)
 end
 
-local function autoReroll()
-    if getFlag("autoReroll") then return end
-    setFlag("autoReroll", true)
-    while _G.AUTO_REROLL_ATIVO do
-        pcall(function() if rerollRemote then rerollRemote:InvokeServer(ORNAMENT_ID) end end)
-        task.wait(DELAY_REROLL)
-    end
-    setFlag("autoReroll", false)
-end
-
 -- TOGGLES COM ANIMAÇÕES
 clickButton.MouseButton1Click:Connect(function()
     _G.AUTO_CLICK_ATIVO = not _G.AUTO_CLICK_ATIVO
@@ -1243,23 +1453,6 @@ openButton.MouseButton1Click:Connect(function()
     else
         TweenService:Create(openStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,60,80)}):Play()
         TweenService:Create(openStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(180,40,60)}):Play()
-    end
-end)
-
-autoRerollButton.MouseButton1Click:Connect(function()
-    _G.AUTO_REROLL_ATIVO = not _G.AUTO_REROLL_ATIVO
-    autoRerollStatus.Text = _G.AUTO_REROLL_ATIVO and "ON" or "OFF"
-    if _G.AUTO_REROLL_ATIVO then
-        TweenService:Create(autoRerollStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50,200,100)}):Play()
-        TweenService:Create(autoRerollStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(40,180,80)}):Play()
-        foundLabel.Text = "🎯 Sistema ativo - Girando marca automaticamente...\n\nClique novamente no botão para parar."
-        foundLabel.TextColor3 = Color3.fromRGB(100,255,150)
-        task.spawn(autoReroll)
-    else
-        TweenService:Create(autoRerollStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,60,80)}):Play()
-        TweenService:Create(autoRerollStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(180,40,60)}):Play()
-        foundLabel.Text = "🎯 Sistema parado!\n\nClique no botão acima para reiniciar."
-        foundLabel.TextColor3 = Color3.fromRGB(255,215,100)
     end
 end)
 
