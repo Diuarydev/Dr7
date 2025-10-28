@@ -727,7 +727,7 @@ local function iniciarLoop(item)
             if not ok then
                 warn("Erro "..item.nome..":", err)
             end
-            wait(0.00001)
+            wait(0.001)
         end
     end)
 end
@@ -1333,7 +1333,7 @@ local function autoReborn()
     setFlag("autoReborn", true)
     while _G.AUTO_REBORN_ATIVO do
         pcall(function() if rebornRemote then rebornRemote:FireServer() end end)
-        task.wait(1)
+        task.wait(0.01)
     end
     setFlag("autoReborn", false)
 end
@@ -1345,7 +1345,7 @@ local function autoOpenBaus()
     while _G.AUTO_OPEN_ATIVO do
         for _, id in ipairs(baus) do
             pcall(function() if openBoxRemote then openBoxRemote:FireServer(id) end end)
-            task.wait(0.001)
+            task.wait(0.0001)
         end
     end
     setFlag("autoOpen", false)
@@ -1377,7 +1377,7 @@ local function autoHaloBronze()
     setFlag("autoHaloBronze", true)
     while _G.AUTO_HALO_BRONZE_ATIVO do
         pcall(function() if rerollHaloRemote then rerollHaloRemote:InvokeServer(1) end end)
-        task.wait(HALO_DELAY)
+        task.wait(0.0001)
     end
     setFlag("autoHaloBronze", false)
 end
@@ -1387,7 +1387,7 @@ local function autoHaloOuro()
     setFlag("autoHaloOuro", true)
     while _G.AUTO_HALO_OURO_ATIVO do
         pcall(function() if rerollHaloRemote then rerollHaloRemote:InvokeServer(2) end end)
-        task.wait(HALO_DELAY)
+        task.wait(0.0001)
     end
     setFlag("autoHaloOuro", false)
 end
@@ -1397,7 +1397,7 @@ local function autoHaloDiamante()
     setFlag("autoHaloDiamante", true)
     while _G.AUTO_HALO_DIAMANTE_ATIVO do
         pcall(function() if rerollHaloRemote then rerollHaloRemote:InvokeServer(3) end end)
-        task.wait(HALO_DELAY)
+        task.wait(0.0001)
     end
     setFlag("autoHaloDiamante", false)
 end
@@ -1411,7 +1411,7 @@ local function autoExchangeHalo()
                 exchangeHaloRemote:InvokeServer({ haloType = 3, count = 1 })
             end
         end)
-        task.wait(EXCHANGE_HALO_DELAY)
+        task.wait(0.0001)
     end
     setFlag("autoExchangeHalo", false)
 end
