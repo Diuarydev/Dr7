@@ -61,9 +61,6 @@ local detectedHeroes = {}
 local keyStorage = "DiuaryHub_KeyExpiration"
 local keyDuration = 7 * 3600
 
-local function salvarKeyExpiracao(timestamp)
-    pcall(function() writefile(keyStorage, tostring(timestamp)) end)
-end
 
 local function carregarKeyExpiracao()
     local success, data = pcall(function() return readfile(keyStorage) end)
