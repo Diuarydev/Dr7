@@ -58,7 +58,6 @@ local function setFlag(name, v) taskRunningFlags[name] = v end
 local function getFlag(name) return taskRunningFlags[name] end
 local detectedHeroes = {}
 
--- Removido sistema de salvamento de key (keyStorage, keyDuration, carregarKeyExpiracao, salvarKeyExpiracao, verificarKeyValida)
 
 -- VERIFICAR KEY - SEM SALVAMENTO
 local function verificarKey()
