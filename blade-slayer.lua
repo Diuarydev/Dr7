@@ -1,4 +1,4 @@
--- HUB DIUARYOG PROFISSIONAL v3.3 - Layout Premium Mobile + OCT Farm
+-- HUB DIUARYOG PROFISSIONAL v3.3 - COMPLETO
 -- By DiuaryOG 💙
 
 local Players = game:GetService("Players")
@@ -8,10 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
--- Espera remotes
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
-
--- Remotes
 local rerollRemote = remotes:FindFirstChild("RerollOrnament")
 local clickRemote = remotes:FindFirstChild("PlayerClickAttack")
 local rebornRemote = remotes:FindFirstChild("PlayerReborn")
@@ -23,15 +20,14 @@ local useOrnamentRemote = remotes:FindFirstChild("UseOrnament")
 local heroSkillRemote = remotes:FindFirstChild("HeroSkillHarm")
 local PotionMergeRemote = remotes:FindFirstChild("PotionMerge")
 
--- CONFIG
 local ORNAMENT_ID = 400002
 local DELAY_REROLL = 0.1
 local RESPIRATION_SKILL_DELAY = 0.05
 local HALO_DELAY = 0.001
 local EXCHANGE_HALO_DELAY = 0.01
-local KEYS_VALIDAS = { "luh", "fifa" }
+local KEY_PERMANENTE = "fifa"
+local KEYS_TEMPORARIAS = {"7horaskey"}
 
--- Estados globais
 _G.AUTO_CLICK_ATIVO = false
 _G.AUTO_REBORN_ATIVO = false
 _G.AUTO_OPEN_ATIVO = false
@@ -42,14 +38,12 @@ _G.AUTO_HALO_DIAMANTE_ATIVO = false
 _G.AUTO_EXCHANGE_HALO_ATIVO = false
 _G.AUTO_OCT_ATIVO = false
 
--- Ornamentos Config
 local ORNAMENTS = {
     DMG = { ornamentId = 410028, machineId = 400005 },
     Power = { ornamentId = 410026, machineId = 400005 },
     Lucky = { ornamentId = 410025, machineId = 400005 }
 }
 
--- Configuração dos itens de reroll individual
 local itensReroll = {
     {nome="MÁSCARA", id=400001, girando=false},
     {nome="MOCHILA", id=400003, girando=false},
@@ -57,17 +51,53 @@ local itensReroll = {
     {nome="TRILHA", id=400004, girando=false},
 }
 
--- FLAGS E ESTADOS
 local ABA_ATUAL = "Farm"
 local taskRunningFlags = {}
 local function setFlag(name, v) taskRunningFlags[name] = v end
 local function getFlag(name) return taskRunningFlags[name] end
-
--- Full DMG (detecção)
 local detectedHeroes = {}
 
--- SISTEMA DE KEY
+-- SISTEMA KEY TEMPORÁRIA
+local keyStorage = "DiuaryHub_KeyExpiration"
+local keyDuration = 7 * 3600
+
+local function salvarKeyExpiracao(timestamp)
+    pcall(function() writefile(keyStorage, tostring(timestamp)) end)
+end
+
+local function carregarKeyExpiracao()
+    local success, data = pcall(function() return readfile(keyStorage) end)
+    if success and data then return tonumber(data) end
+    return nil
+end
+
+local function limparKey()
+    pcall(function() delfile(keyStorage) end)
+end
+
+local function verificarKeyValida()
+    local expiracao = carregarKeyExpiracao()
+    if expiracao then
+        local tempoAtual = os.time()
+        if tempoAtual < expiracao then
+            local tempoRestante = expiracao - tempoAtual
+            local horasRestantes = math.floor(tempoRestante / 3600)
+            local minutosRestantes = math.floor((tempoRestante % 3600) / 60)
+            print("✅ Key válida! Tempo restante: " .. horasRestantes .. "h " .. minutosRestantes .. "min")
+            return true
+        else
+            print("⏰ Key expirada! Digite uma nova key.")
+            limparKey()
+            return false
+        end
+    end
+    return false
+end
+
+-- VERIFICAR KEY
 local function verificarKey()
+    if verificarKeyValida() then return end
+    
     local playerGui = LocalPlayer:WaitForChild("PlayerGui")
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "KeySystemGui"
@@ -83,8 +113,8 @@ local function verificarKey()
     Overlay.BorderSizePixel = 0
 
     local Frame = Instance.new("Frame", ScreenGui)
-    Frame.Size = UDim2.new(0, 400, 0, 280)
-    Frame.Position = UDim2.new(0.5, -200, 0.5, -140)
+    Frame.Size = UDim2.new(0, 400, 0, 340)
+    Frame.Position = UDim2.new(0.5, -200, 0.5, -170)
     Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     Frame.BorderSizePixel = 0
 
@@ -122,17 +152,18 @@ local function verificarKey()
     Title.Font = Enum.Font.GothamBold
 
     local SubTitle = Instance.new("TextLabel", Frame)
-    SubTitle.Size = UDim2.new(1, -40, 0, 20)
+    SubTitle.Size = UDim2.new(1, -40, 0, 40)
     SubTitle.Position = UDim2.new(0, 20, 0, 110)
     SubTitle.BackgroundTransparency = 1
-    SubTitle.Text = "Digite sua chave de acesso para continuar"
+    SubTitle.Text = "Digite sua chave de acesso para continuar\n⏰ Keys temporárias: 7 horas"
     SubTitle.TextColor3 = Color3.fromRGB(120, 120, 140)
-    SubTitle.TextSize = 11
+    SubTitle.TextSize = 10
     SubTitle.Font = Enum.Font.Gotham
+    SubTitle.TextWrapped = true
 
     local TextBox = Instance.new("TextBox", Frame)
     TextBox.Size = UDim2.new(0, 340, 0, 45)
-    TextBox.Position = UDim2.new(0.5, -170, 0, 145)
+    TextBox.Position = UDim2.new(0.5, -170, 0, 165)
     TextBox.PlaceholderText = "Insira sua key..."
     TextBox.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     TextBox.TextColor3 = Color3.new(1, 1, 1)
@@ -149,7 +180,7 @@ local function verificarKey()
 
     local ConfirmButton = Instance.new("TextButton", Frame)
     ConfirmButton.Size = UDim2.new(0, 340, 0, 45)
-    ConfirmButton.Position = UDim2.new(0.5, -170, 0, 205)
+    ConfirmButton.Position = UDim2.new(0.5, -170, 0, 225)
     ConfirmButton.Text = "✓ VERIFICAR"
     ConfirmButton.BackgroundColor3 = Color3.fromRGB(80, 140, 255)
     ConfirmButton.TextColor3 = Color3.new(1, 1, 1)
@@ -162,13 +193,14 @@ local function verificarKey()
     BtnCorner.CornerRadius = UDim.new(0,10)
 
     local StatusLabel = Instance.new("TextLabel", Frame)
-    StatusLabel.Size = UDim2.new(1, -40, 0, 20)
-    StatusLabel.Position = UDim2.new(0, 20, 0, 255)
+    StatusLabel.Size = UDim2.new(1, -40, 0, 40)
+    StatusLabel.Position = UDim2.new(0, 20, 0, 280)
     StatusLabel.BackgroundTransparency = 1
     StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     StatusLabel.TextSize = 11
     StatusLabel.Font = Enum.Font.GothamMedium
     StatusLabel.Text = ""
+    StatusLabel.TextWrapped = true
 
     ConfirmButton.MouseEnter:Connect(function()
         TweenService:Create(ConfirmButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100, 160, 255)}):Play()
@@ -186,15 +218,35 @@ local function verificarKey()
             TextBoxStroke.Color = Color3.fromRGB(255, 80, 80)
             return
         end
-        for _, key in pairs(KEYS_VALIDAS) do
+        
+        if keyInput == KEY_PERMANENTE then
+            keyValida = true
+            local expiracao = os.time() + (100 * 365 * 24 * 3600)
+            salvarKeyExpiracao(expiracao)
+            StatusLabel.Text = "✓ Autenticação bem-sucedida!\n♾️ Key permanente ativada!"
+            StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
+            ConfirmButton.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+            ConfirmButton.Text = "✓ SUCESSO"
+            TextBoxStroke.Color = Color3.fromRGB(50, 200, 100)
+            task.wait(1.5)
+            TweenService:Create(Frame, TweenInfo.new(0.3), {Position = UDim2.new(0.5, -200, -0.5, 0)}):Play()
+            TweenService:Create(Overlay, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
+            task.wait(0.3)
+            ScreenGui:Destroy()
+            return
+        end
+        
+        for _, key in pairs(KEYS_TEMPORARIAS) do
             if keyInput == key then
                 keyValida = true
-                StatusLabel.Text = "✓ Autenticação bem-sucedida!"
+                local expiracao = os.time() + keyDuration
+                salvarKeyExpiracao(expiracao)
+                StatusLabel.Text = "✓ Autenticação bem-sucedida!\n⏰ Válida por 7 horas"
                 StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
                 ConfirmButton.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
                 ConfirmButton.Text = "✓ SUCESSO"
                 TextBoxStroke.Color = Color3.fromRGB(50, 200, 100)
-                task.wait(1)
+                task.wait(1.5)
                 TweenService:Create(Frame, TweenInfo.new(0.3), {Position = UDim2.new(0.5, -200, -0.5, 0)}):Play()
                 TweenService:Create(Overlay, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
                 task.wait(0.3)
@@ -202,6 +254,7 @@ local function verificarKey()
                 return
             end
         end
+        
         StatusLabel.Text = "✗ Key inválida! Tente novamente."
         StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
         TextBoxStroke.Color = Color3.fromRGB(255, 80, 80)
