@@ -27,7 +27,7 @@ local HALO_DELAY = 0.001
 local EXCHANGE_HALO_DELAY = 0.01
 -- Keys válidas mantidas
 local KEY_PERMANENTE = "fifa"
-local KEYS_TEMPORARIAS = {"error557"}
+local KEYS_TEMPORARIAS = {}
 
 _G.AUTO_CLICK_ATIVO = false
 _G.AUTO_REBORN_ATIVO = false
