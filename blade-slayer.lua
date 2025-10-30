@@ -456,7 +456,7 @@ end)
 
 -- SIDEBAR COM SCROLL
 local sidebar = Instance.new("ScrollingFrame", hubFrame)
-sidebar.Size = UDim2.new(0,105,1,-60)
+sidebar.Size = UDim2.new(0,118,1,-60)
 sidebar.Position = UDim2.new(0,5,0,55)
 sidebar.BackgroundColor3 = Color3.fromRGB(20,20,28)
 sidebar.BorderSizePixel = 0
@@ -469,8 +469,8 @@ sidebarCorner.CornerRadius = UDim.new(0,10)
 
 -- CONTENT AREA COM SCROLL
 local contentArea = Instance.new("ScrollingFrame", hubFrame)
-contentArea.Size = UDim2.new(1, -125, 1, -65)
-contentArea.Position = UDim2.new(0,120,0,58)
+contentArea.Size = UDim2.new(1, -133, 1, -65)
+contentArea.Position = UDim2.new(0,128,0,58)
 contentArea.BackgroundTransparency = 1
 contentArea.BorderSizePixel = 0
 contentArea.ScrollBarThickness = 4
@@ -509,7 +509,7 @@ end
 -- Tab button creator reduzido
 local function createTabButton(text, icon, yPos)
     local btn = Instance.new("TextButton", sidebar)
-    btn.Size = UDim2.new(0,95,0,42)
+    btn.Size = UDim2.new(0,108,0,42)
     btn.Position = UDim2.new(0,5,0,yPos)
     btn.BackgroundColor3 = Color3.fromRGB(25,25,35)
     btn.TextColor3 = Color3.fromRGB(120,140,180)
