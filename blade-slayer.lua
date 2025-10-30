@@ -337,119 +337,181 @@ do
     end)
 end
 
--- Main hub frame reduzido para mobile (500x420)
+
+-- TAMANHO DO HUB (procure por "Main hub frame")
 local hubFrame = Instance.new("Frame", screenGui)
-hubFrame.Size = UDim2.new(0, 500, 0, 420)
-hubFrame.Position = UDim2.new(0.5, -250, 0.5, -210)
+hubFrame.Size = UDim2.new(0, 400, 0, 350)
+hubFrame.Position = UDim2.new(0.5, -200, 0.5, -175) -- CENTRALIZADO
 hubFrame.BackgroundColor3 = Color3.fromRGB(15,15,20)
 hubFrame.BorderSizePixel = 0
 hubFrame.Visible = false
 hubFrame.ZIndex = 100000
 
-local hubCorner = Instance.new("UICorner", hubFrame)
-hubCorner.CornerRadius = UDim.new(0,18)
+-- SIDEBAR COM SCROLL (procure por "Sidebar reduzido")
+local sidebar = Instance.new("ScrollingFrame", hubFrame) -- MUDOU: Frame para ScrollingFrame
+sidebar.Size = UDim2.new(0,100,1,-60) -- MENOR: era 120
+sidebar.Position = UDim2.new(0,5,0,55) -- AJUSTADO
+sidebar.BackgroundColor3 = Color3.fromRGB(20,20,28)
+sidebar.BorderSizePixel = 0
+sidebar.ScrollBarThickness = 4 -- BARRA FINA
+sidebar.CanvasSize = UDim2.new(0,0,0,350) -- ALTURA DO CONTEÚDO (7 abas x 50)
 
-local hubStroke = Instance.new("UIStroke", hubFrame)
-hubStroke.Color = Color3.fromRGB(80,140,255)
-hubStroke.Thickness = 2
-hubStroke.Transparency = 0.6
+local sidebarCorner = Instance.new("UICorner", sidebar)
+sidebarCorner.CornerRadius = UDim.new(0,12)
 
--- Accent line
-local accentLine = Instance.new("Frame", hubFrame)
-accentLine.Size = UDim2.new(1,0,0,2)
-accentLine.Position = UDim2.new(0,0,0,0)
-accentLine.BackgroundColor3 = Color3.fromRGB(80,140,255)
-accentLine.BorderSizePixel = 0
+local sidebarStroke = Instance.new("UIStroke", sidebar)
+sidebarStroke.Color = Color3.fromRGB(40,40,55)
+sidebarStroke.Thickness = 1
 
-local accentCorner = Instance.new("UICorner", accentLine)
-accentCorner.CornerRadius = UDim.new(0,18)
+-- CONTENT AREA COM SCROLL (procure por "contentArea")
+local contentArea = Instance.new("ScrollingFrame", hubFrame) -- MUDOU: Frame para ScrollingFrame
+contentArea.Size = UDim2.new(1, -115, 1, -65) -- AJUSTADO
+contentArea.Position = UDim2.new(0,110,0,58) -- AJUSTADO
+contentArea.BackgroundTransparency = 1
+contentArea.ScrollBarThickness = 4 -- BARRA FINA
+contentArea.CanvasSize = UDim2.new(0,0,0,600) -- ALTURA DO CONTEÚDO
 
--- Header reduzido
-local header = Instance.new("Frame", hubFrame)
-header.Size = UDim2.new(1,0,0,55)
-header.Position = UDim2.new(0,0,0,0)
-header.BackgroundColor3 = Color3.fromRGB(20,20,28)
-header.BorderSizePixel = 0
+-- BOTÕES DAS ABAS MENORES (procure por "createTabButton")
+local function createTabButton(text, icon, yPos)
+    local btn = Instance.new("TextButton", sidebar)
+    btn.Size = UDim2.new(0,90,0,38) -- MENOR: era 105x42
+    btn.Position = UDim2.new(0,5,0,yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(25,25,35)
+    btn.TextColor3 = Color3.fromRGB(120,140,180)
+    btn.Text = ""
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
 
-local headerCorner = Instance.new("UICorner", header)
-headerCorner.CornerRadius = UDim.new(0,18)
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,10)
 
-local headerGradient = Instance.new("UIGradient", header)
-headerGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(25,25,35)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(15,15,20))
-}
-headerGradient.Rotation = 90
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = Color3.fromRGB(40,40,55)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.5
 
-local logoIcon = Instance.new("TextLabel", header)
-logoIcon.Size = UDim2.new(0,40,0,40)
-logoIcon.Position = UDim2.new(0,15,0,7)
-logoIcon.BackgroundTransparency = 1
-logoIcon.Text = "🥀"
-logoIcon.TextSize = 26
-logoIcon.Font = Enum.Font.GothamBold
+    local iconLabel = Instance.new("TextLabel", btn)
+    iconLabel.Size = UDim2.new(0,24,0,24) -- MENOR
+    iconLabel.Position = UDim2.new(0,6,0,7)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Text = icon
+    iconLabel.TextSize = 14 -- MENOR: era 16
+    iconLabel.Font = Enum.Font.GothamBold
 
-local title = Instance.new("TextLabel", header)
-title.Size = UDim2.new(0,250,0,25)
-title.Position = UDim2.new(0,60,0,8)
-title.BackgroundTransparency = 1
-title.Text = "DIUARY HUB"
-title.TextColor3 = Color3.fromRGB(180,220,255)
-title.TextSize = 20
-title.Font = Enum.Font.GothamBold
-title.TextXAlignment = Enum.TextXAlignment.Left
+    local textLabel = Instance.new("TextLabel", btn)
+    textLabel.Size = UDim2.new(0,55,0,38)
+    textLabel.Position = UDim2.new(0,32,0,0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = text
+    textLabel.TextColor3 = Color3.fromRGB(120,140,180)
+    textLabel.TextSize = 10 -- MENOR: era 11
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local titleGradient = Instance.new("UIGradient", title)
-titleGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(150,200,255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(80,140,255))
-}
+    btn.MouseEnter:Connect(function()
+        if btn.BackgroundColor3 ~= Color3.fromRGB(80,140,255) then
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35,35,45)}):Play()
+        end
+    end)
 
-local version = Instance.new("TextLabel", header)
-version.Size = UDim2.new(0,100,0,16)
-version.Position = UDim2.new(0,60,0,33)
-version.BackgroundTransparency = 1
-version.Text = "vivian"
-version.TextColor3 = Color3.fromRGB(100,120,150)
-version.TextSize = 9
-version.Font = Enum.Font.GothamMedium
-version.TextXAlignment = Enum.TextXAlignment.Left
+    btn.MouseLeave:Connect(function()
+        if btn.BackgroundColor3 ~= Color3.fromRGB(80,140,255) then
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25,25,35)}):Play()
+        end
+    end)
 
--- Close button
-local closeBtn = Instance.new("TextButton", header)
-closeBtn.Size = UDim2.new(0,38,0,38)
-closeBtn.Position = UDim2.new(1, -48, 0, 8)
-closeBtn.BackgroundColor3 = Color3.fromRGB(40,40,55)
-closeBtn.Text = "✕"
-closeBtn.TextColor3 = Color3.fromRGB(255,100,120)
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 18
-closeBtn.BorderSizePixel = 0
-closeBtn.AutoButtonColor = false
+    return btn, iconLabel, textLabel, stroke
+end
 
-local closeCorner = Instance.new("UICorner", closeBtn)
-closeCorner.CornerRadius = UDim.new(0,10)
+-- TABS COM ESPAÇAMENTO AJUSTADO
+local farmTab, farmIcon, farmText, farmStroke = createTabButton("Farm","🎮",5)
+local marcaTab, marcaIcon, marcaText, marcaStroke = createTabButton("Marca","🎯",48)
+local skillsTab, skillsIcon, skillsText, skillsStroke = createTabButton("Skills","⚡",91)
+local auraTab, auraIcon, auraText, auraStroke = createTabButton("Aura","✨",134)
+local talismaTab, talismaIcon, talismaText, talismaStroke = createTabButton("Talismã","💎",177)
+local fusePotionTab, fusePotionIcon, fusePotionText, fusePotionStroke = createTabButton("Potion","🧪",220)
+local octTab, octIcon, octText, octStroke = createTabButton("OCT","🐙",263)
 
-local closeStroke = Instance.new("UIStroke", closeBtn)
-closeStroke.Color = Color3.fromRGB(80,80,100)
-closeStroke.Thickness = 1
+-- BOTÕES MENORES (procure por "createButton")
+local function createButton(text, icon, parent, yPos)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(0,270,0,40) -- MENOR: era 345x45
+    btn.Position = UDim2.new(0,5,0,yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(25,25,35)
+    btn.Text = ""
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
 
-closeBtn.MouseEnter:Connect(function()
-    TweenService:Create(closeBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,60,80)}):Play()
-    TweenService:Create(closeBtn, TweenInfo.new(0.2), {TextColor3 = Color3.new(1,1,1)}):Play()
-end)
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0,10)
 
-closeBtn.MouseLeave:Connect(function()
-    TweenService:Create(closeBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40,40,55)}):Play()
-    TweenService:Create(closeBtn, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255,100,120)}):Play()
-end)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = Color3.fromRGB(50,50,70)
+    stroke.Thickness = 1.5
 
+    local gradient = Instance.new("UIGradient", btn)
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(25,25,35)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(20,20,30))
+    }
+    gradient.Rotation = 45
+
+    local iconLabel = Instance.new("TextLabel", btn)
+    iconLabel.Size = UDim2.new(0,32,0,32) -- MENOR
+    iconLabel.Position = UDim2.new(0,6,0,4)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Text = icon
+    iconLabel.TextSize = 18 -- MENOR: era 20
+    iconLabel.Font = Enum.Font.GothamBold
+
+    local textLabel = Instance.new("TextLabel", btn)
+    textLabel.Size = UDim2.new(0,160,0,40)
+    textLabel.Position = UDim2.new(0,42,0,0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = text
+    textLabel.TextColor3 = Color3.fromRGB(180,200,230)
+    textLabel.TextSize = 12 -- MENOR: era 13
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local status = Instance.new("TextLabel", btn)
+    status.Size = UDim2.new(0,55,0,24) -- MENOR
+    status.Position = UDim2.new(1,-60,0.5,-12)
+    status.BackgroundColor3 = Color3.fromRGB(220,60,80)
+    status.TextColor3 = Color3.new(1,1,1)
+    status.Text = "OFF"
+    status.TextSize = 10 -- MENOR: era 11
+    status.Font = Enum.Font.GothamBold
+    status.BorderSizePixel = 0
+
+    local statusCorner = Instance.new("UICorner", status)
+    statusCorner.CornerRadius = UDim.new(0,7)
+
+    local statusStroke = Instance.new("UIStroke", status)
+    statusStroke.Color = Color3.fromRGB(180,40,60)
+    statusStroke.Thickness = 1.5
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35,35,50)}):Play()
+        TweenService:Create(stroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(80,140,255)}):Play()
+    end)
+
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25,25,35)}):Play()
+        TweenService:Create(stroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(50,50,70)}):Play()
+    end)
+
+    return btn, status, statusStroke
+end
+
+-- CLOSE BUTTON ANIMAÇÃO AJUSTADA
 closeBtn.MouseButton1Click:Connect(function()
     TweenService:Create(hubFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0), Position = UDim2.new(0.5,0,0.5,0)}):Play()
     task.wait(0.3)
     hubFrame.Visible = false
-    hubFrame.Size = UDim2.new(0, 500, 0, 420)
-    hubFrame.Position = UDim2.new(0.5, -250, 0.5, -210)
+    hubFrame.Size = UDim2.new(0, 400, 0, 350) -- ATUALIZADO
+    hubFrame.Position = UDim2.new(0.5, -200, 0.5, -175) -- ATUALIZADO
     floatingButton.Visible = true
 end)
 
@@ -457,7 +519,7 @@ floatingButton.MouseButton1Click:Connect(function()
     hubFrame.Visible = true
     hubFrame.Size = UDim2.new(0,0,0,0)
     hubFrame.Position = UDim2.new(0.5,0,0.5,0)
-    TweenService:Create(hubFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 500, 0, 420), Position = UDim2.new(0.5, -250, 0.5, -210)}):Play()
+    TweenService:Create(hubFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 400, 0, 350), Position = UDim2.new(0.5, -200, 0.5, -175)}):Play()
     floatingButton.Visible = false
 end)
 
