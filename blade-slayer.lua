@@ -1,4 +1,4 @@
--- HUB DIUARYOG PROFISSIONAL v3.3 - Layout Premium Mobile
+-- HUB DIUARYOG PROFISSIONAL v3.3 - Layout Premium Mobile + OCT Farm
 -- By DiuaryOG 💙
 
 local Players = game:GetService("Players")
@@ -40,6 +40,7 @@ _G.AUTO_HALO_BRONZE_ATIVO = false
 _G.AUTO_HALO_OURO_ATIVO = false
 _G.AUTO_HALO_DIAMANTE_ATIVO = false
 _G.AUTO_EXCHANGE_HALO_ATIVO = false
+_G.AUTO_OCT_ATIVO = false
 
 -- Ornamentos Config
 local ORNAMENTS = {
@@ -508,13 +509,14 @@ local function createTabButton(text, icon, yPos)
     return btn, iconLabel, textLabel, stroke
 end
 
--- Create tabs - adicionada nova aba Potion
+-- Create tabs - adicionada nova aba OCT
 local farmTab, farmIcon, farmText, farmStroke = createTabButton("Farm","🎮",8)
 local marcaTab, marcaIcon, marcaText, marcaStroke = createTabButton("Marca","🎯",56)
 local skillsTab, skillsIcon, skillsText, skillsStroke = createTabButton("Skills","⚡",104)
 local auraTab, auraIcon, auraText, auraStroke = createTabButton("Aura","✨",152)
 local talismaTab, talismaIcon, talismaText, talismaStroke = createTabButton("Talismã","💎",200)
 local fusePotionTab, fusePotionIcon, fusePotionText, fusePotionStroke = createTabButton("Potion","🧪",248)
+local octTab, octIcon, octText, octStroke = createTabButton("OCT","🐙",296)
 
 -- Create containers
 local farmContainer = Instance.new("Frame", contentArea)
@@ -542,13 +544,17 @@ talismaContainer.Size = UDim2.new(1,0,1,0)
 talismaContainer.BackgroundTransparency = 1
 talismaContainer.Visible = false
 
--- Novo container para FusePotion
 local fusePotionContainer = Instance.new("Frame", contentArea)
 fusePotionContainer.Size = UDim2.new(1,0,1,0)
 fusePotionContainer.BackgroundTransparency = 1
 fusePotionContainer.Visible = false
 
--- Switch tabs atualizado com nova aba
+local octContainer = Instance.new("Frame", contentArea)
+octContainer.Size = UDim2.new(1,0,1,0)
+octContainer.BackgroundTransparency = 1
+octContainer.Visible = false
+
+-- Switch tabs atualizado com nova aba OCT
 local function switchTab(tabName)
     ABA_ATUAL = tabName
     local tabs = {
@@ -557,7 +563,8 @@ local function switchTab(tabName)
         {btn = skillsTab, icon = skillsIcon, text = skillsText, stroke = skillsStroke},
         {btn = auraTab, icon = auraIcon, text = auraText, stroke = auraStroke},
         {btn = talismaTab, icon = talismaIcon, text = talismaText, stroke = talismaStroke},
-        {btn = fusePotionTab, icon = fusePotionIcon, text = fusePotionText, stroke = fusePotionStroke}
+        {btn = fusePotionTab, icon = fusePotionIcon, text = fusePotionText, stroke = fusePotionStroke},
+        {btn = octTab, icon = octIcon, text = octText, stroke = octStroke}
     }
     
     for _, t in ipairs(tabs) do
@@ -572,6 +579,7 @@ local function switchTab(tabName)
     auraContainer.Visible = false
     talismaContainer.Visible = false
     fusePotionContainer.Visible = false
+    octContainer.Visible = false
 
     if tabName == "Farm" then
         TweenService:Create(farmTab, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80,140,255)}):Play()
@@ -609,6 +617,12 @@ local function switchTab(tabName)
         fusePotionStroke.Transparency = 0
         fusePotionStroke.Color = Color3.fromRGB(100,160,255)
         fusePotionContainer.Visible = true
+    elseif tabName == "OCT" then
+        TweenService:Create(octTab, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80,140,255)}):Play()
+        TweenService:Create(octText, TweenInfo.new(0.2), {TextColor3 = Color3.new(1,1,1)}):Play()
+        octStroke.Transparency = 0
+        octStroke.Color = Color3.fromRGB(100,160,255)
+        octContainer.Visible = true
     end
 end
 
@@ -618,6 +632,7 @@ skillsTab.MouseButton1Click:Connect(function() switchTab("Skills") end)
 auraTab.MouseButton1Click:Connect(function() switchTab("Aura") end)
 talismaTab.MouseButton1Click:Connect(function() switchTab("Talismã") end)
 fusePotionTab.MouseButton1Click:Connect(function() switchTab("FusePotion") end)
+octTab.MouseButton1Click:Connect(function() switchTab("OCT") end)
 
 -- Button creator reduzido
 local function createButton(text, icon, parent, yPos)
@@ -1315,6 +1330,286 @@ for _, potionData in ipairs(potionButtons) do
     btn.MouseButton1Click:Connect(potionData.callback)
 end
 
+-- ============================================
+-- ABA OCT - AUTO FARM OCTOPUS
+-- ============================================
+
+local octInfo = Instance.new("TextLabel", octContainer)
+octInfo.Size = UDim2.new(0,345,0,45)
+octInfo.Position = UDim2.new(0,10,0,8)
+octInfo.BackgroundColor3 = Color3.fromRGB(25,25,35)
+octInfo.TextColor3 = Color3.fromRGB(255,215,100)
+octInfo.TextSize = 11
+octInfo.Font = Enum.Font.GothamBold
+octInfo.Text = "🐙 AUTO FARM OCTOPUS\n\nPuxa e ataca Octopus automaticamente"
+octInfo.TextWrapped = true
+
+local octInfoCorner = Instance.new("UICorner", octInfo)
+octInfoCorner.CornerRadius = UDim.new(0,12)
+
+local octInfoStroke = Instance.new("UIStroke", octInfo)
+octInfoStroke.Color = Color3.fromRGB(80,80,100)
+octInfoStroke.Thickness = 1.5
+
+-- Variáveis OCT
+local octopusGUIDs = {}
+local attackSpeedOct = 0.001
+local loopSpeedOct = 0.05
+
+-- Funções OCT
+local function findOctopusGUID(octopus)
+    for _, descendant in pairs(octopus:GetDescendants()) do
+        if descendant:IsA("StringValue") then
+            local value = descendant.Value
+            if type(value) == "string" and value:match("%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x") then
+                return value
+            end
+        end
+    end
+    for attrName, attrValue in pairs(octopus:GetAttributes()) do
+        if type(attrValue) == "string" and attrValue:match("%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x") then
+            return attrValue
+        end
+    end
+    return nil
+end
+
+local function updateOctopusGUIDs()
+    local enemiesFolder = Workspace:FindFirstChild("Enemys")
+    if not enemiesFolder then return end
+    for _, npc in pairs(enemiesFolder:GetChildren()) do
+        if npc:IsA("Model") and npc.Name:lower() == "octopus" then
+            local guid = findOctopusGUID(npc)
+            if guid then
+                octopusGUIDs[npc] = guid
+            end
+        end
+    end
+end
+
+local function getAllOctopus()
+    local enemiesFolder = Workspace:FindFirstChild("Enemys")
+    if not enemiesFolder then return {} end
+    local octopusList = {}
+    for _, npc in pairs(enemiesFolder:GetChildren()) do
+        if npc:IsA("Model") and npc.Name:lower() == "octopus" and npc:FindFirstChild("HumanoidRootPart") then
+            table.insert(octopusList, npc)
+        end
+    end
+    return octopusList
+end
+
+local function isAlive(octopus)
+    local humanoid = octopus:FindFirstChildOfClass("Humanoid")
+    return humanoid and humanoid.Health > 0
+end
+
+local function freezeOctopus(octopus)
+    pcall(function()
+        local hrp = octopus:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.Anchored = true
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                hrp.CFrame = char.HumanoidRootPart.CFrame * CFrame.new(0, 0, -15)
+            end
+        end
+    end)
+end
+
+local function attackOctopus(octopus)
+    task.spawn(function()
+        pcall(function()
+            local guid = findOctopusGUID(octopus) or octopusGUIDs[octopus]
+            if guid then
+                local args = {{attackEnemyGUID = guid}}
+                task.spawn(function()
+                    pcall(function()
+                        ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GetAutoAttackRangeAddition"):InvokeServer()
+                    end)
+                end)
+                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("PlayerClickAttack"):FireServer(unpack(args))
+            end
+        end)
+    end)
+end
+
+local function monitorNewOctopus()
+    local enemiesFolder = Workspace:WaitForChild("Enemys", 10)
+    if not enemiesFolder then return end
+    enemiesFolder.ChildAdded:Connect(function(child)
+        if child:IsA("Model") and child.Name:lower() == "octopus" then
+            task.wait(0.05)
+            local guid = findOctopusGUID(child)
+            if guid then
+                octopusGUIDs[child] = guid
+            end
+        end
+    end)
+end
+
+monitorNewOctopus()
+
+-- Botão OCT
+local octButton, octStatus, octButtonStroke = createButton("Auto Farm", "🐙", octContainer, 60)
+
+-- Labels OCT
+local octAttackLabel = Instance.new("TextLabel", octContainer)
+octAttackLabel.Size = UDim2.new(1, -20, 0, 18)
+octAttackLabel.Position = UDim2.new(0, 10, 0, 112)
+octAttackLabel.BackgroundTransparency = 1
+octAttackLabel.TextColor3 = Color3.fromRGB(150,170,200)
+octAttackLabel.Text = "⚔️ Vel. Ataque: 0.001s"
+octAttackLabel.TextSize = 10
+octAttackLabel.Font = Enum.Font.GothamBold
+octAttackLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local octAttackSlider = Instance.new("Frame", octContainer)
+octAttackSlider.Size = UDim2.new(0,345,0,8)
+octAttackSlider.Position = UDim2.new(0,10,0,135)
+octAttackSlider.BackgroundColor3 = Color3.fromRGB(50,50,55)
+octAttackSlider.BorderSizePixel = 0
+
+local octAttackCorner = Instance.new("UICorner", octAttackSlider)
+octAttackCorner.CornerRadius = UDim.new(0,4)
+
+local octAttackBtn = Instance.new("TextButton", octAttackSlider)
+octAttackBtn.Size = UDim2.new(0,20,0,20)
+octAttackBtn.Position = UDim2.new(0,0,0.5,-10)
+octAttackBtn.BackgroundColor3 = Color3.fromRGB(255,100,100)
+octAttackBtn.Text = ""
+octAttackBtn.BorderSizePixel = 0
+
+local octAttackBtnCorner = Instance.new("UICorner", octAttackBtn)
+octAttackBtnCorner.CornerRadius = UDim.new(1,0)
+
+local octLoopLabel = Instance.new("TextLabel", octContainer)
+octLoopLabel.Size = UDim2.new(1, -20, 0, 18)
+octLoopLabel.Position = UDim2.new(0, 10, 0, 165)
+octLoopLabel.BackgroundTransparency = 1
+octLoopLabel.TextColor3 = Color3.fromRGB(150,170,200)
+octLoopLabel.Text = "🔄 Vel. Loop: 0.050s"
+octLoopLabel.TextSize = 10
+octLoopLabel.Font = Enum.Font.GothamBold
+octLoopLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local octLoopSlider = Instance.new("Frame", octContainer)
+octLoopSlider.Size = UDim2.new(0,345,0,8)
+octLoopSlider.Position = UDim2.new(0,10,0,188)
+octLoopSlider.BackgroundColor3 = Color3.fromRGB(50,50,55)
+octLoopSlider.BorderSizePixel = 0
+
+local octLoopCorner = Instance.new("UICorner", octLoopSlider)
+octLoopCorner.CornerRadius = UDim.new(0,4)
+
+local octLoopBtn = Instance.new("TextButton", octLoopSlider)
+octLoopBtn.Size = UDim2.new(0,20,0,20)
+octLoopBtn.Position = UDim2.new(0.05,-10,0.5,-10)
+octLoopBtn.BackgroundColor3 = Color3.fromRGB(100,200,255)
+octLoopBtn.Text = ""
+octLoopBtn.BorderSizePixel = 0
+
+local octLoopBtnCorner = Instance.new("UICorner", octLoopBtn)
+octLoopBtnCorner.CornerRadius = UDim.new(1,0)
+
+local octPerfLabel = Instance.new("TextLabel", octContainer)
+octPerfLabel.Size = UDim2.new(1, -20, 0, 15)
+octPerfLabel.Position = UDim2.new(0, 10, 0, 210)
+octPerfLabel.BackgroundTransparency = 1
+octPerfLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+octPerfLabel.Text = "💚 Performance: OK"
+octPerfLabel.Font = Enum.Font.GothamMedium
+octPerfLabel.TextSize = 10
+octPerfLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Sliders OCT
+local draggingOctAttack = false
+local draggingOctLoop = false
+
+octAttackBtn.MouseButton1Down:Connect(function() draggingOctAttack = true end)
+octLoopBtn.MouseButton1Down:Connect(function() draggingOctLoop = true end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingOctAttack = false
+        draggingOctLoop = false
+    end
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if draggingOctAttack then
+        local mouse = LocalPlayer:GetMouse()
+        local relativeX = math.clamp(mouse.X - octAttackSlider.AbsolutePosition.X, 0, octAttackSlider.AbsoluteSize.X)
+        local percentage = relativeX / octAttackSlider.AbsoluteSize.X
+        octAttackBtn.Position = UDim2.new(percentage, -10, 0.5, -10)
+        attackSpeedOct = 0.001 + (percentage * 0.999)
+        octAttackLabel.Text = string.format("⚔️ Vel. Ataque: %.3fs", attackSpeedOct)
+        if attackSpeedOct < 0.01 then
+            octPerfLabel.Text = "⚠️ Performance: Muito Rápido!"
+            octPerfLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+        else
+            octPerfLabel.Text = "💚 Performance: OK"
+            octPerfLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        end
+    end
+    if draggingOctLoop then
+        local mouse = LocalPlayer:GetMouse()
+        local relativeX = math.clamp(mouse.X - octLoopSlider.AbsolutePosition.X, 0, octLoopSlider.AbsoluteSize.X)
+        local percentage = relativeX / octLoopSlider.AbsoluteSize.X
+        octLoopBtn.Position = UDim2.new(percentage, -10, 0.5, -10)
+        loopSpeedOct = 0.01 + (percentage * 0.99)
+        octLoopLabel.Text = string.format("🔄 Vel. Loop: %.3fs", loopSpeedOct)
+    end
+end)
+
+-- Auto Farm OCT
+local function autoOctopus()
+    if getFlag("autoOct") then return end
+    setFlag("autoOct", true)
+    while _G.AUTO_OCT_ATIVO do
+        updateOctopusGUIDs()
+        local octopusList = getAllOctopus()
+        for _, npc in pairs(octopusList) do
+            if isAlive(npc) then
+                freezeOctopus(npc)
+            end
+        end
+        for _, npc in pairs(octopusList) do
+            if not _G.AUTO_OCT_ATIVO then break end
+            if isAlive(npc) then
+                attackOctopus(npc)
+                task.wait(attackSpeedOct)
+            end
+        end
+        task.wait(loopSpeedOct)
+    end
+    for _, npc in pairs(getAllOctopus()) do
+        pcall(function()
+            local hrp = npc:FindFirstChild("HumanoidRootPart")
+            if hrp then hrp.Anchored = false end
+        end)
+    end
+    setFlag("autoOct", false)
+end
+
+octButton.MouseButton1Click:Connect(function()
+    _G.AUTO_OCT_ATIVO = not _G.AUTO_OCT_ATIVO
+    octStatus.Text = _G.AUTO_OCT_ATIVO and "ON" or "OFF"
+    if _G.AUTO_OCT_ATIVO then
+        TweenService:Create(octStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50,200,100)}):Play()
+        TweenService:Create(octButtonStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(40,180,80)}):Play()
+        print("🐙 Auto Farm Octopus ativado!")
+        task.spawn(autoOctopus)
+    else
+        TweenService:Create(octStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,60,80)}):Play()
+        TweenService:Create(octButtonStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(180,40,60)}):Play()
+        print("🐙 Auto Farm Octopus desativado!")
+    end
+end)
+
+task.wait(0.5)
+updateOctopusGUIDs()
+
 -- FUNÇÕES DE AUTO
 local function autoClick()
     if getFlag("autoClick") then return end
@@ -1524,4 +1819,4 @@ end)
 -- Inicializa
 switchTab("Farm")
 
-print("Diuary Hub Premium carregado com sucesso!")
+print("Diuary Hub carregado com sucesso!")
