@@ -1,5 +1,4 @@
--- HUB DIUARYOG PROFISSIONAL v3.3 - SEM SALVAMENTO DE KEY
--- By DiuaryOG 💙
+-- By DiuaryOG
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
