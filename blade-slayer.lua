@@ -1,3 +1,177 @@
+-- SISTEMA DE WHITELIST POR USERNAME - SEM SERVIDOR
+-- By DiuaryOG
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+-- ⚙️ CONFIGURAÇÃO - ADICIONE OS USERNAMES AUTORIZADOS AQUI
+local WHITELIST = {
+    "Diuaryy",           -- Você
+    "teste1",     -- Cliente 1
+    "clt2",        -- Cliente 2
+    "clt3",       -- Cliente 3
+    -- Adicione mais usernames aqui
+}
+
+-- WHITELIST VIP (acesso premium/vitalício)
+local WHITELIST_VIP = {
+    "Diuaryy",
+    "luaneburgesa",
+}
+
+-- 🔍 Verificar se o player está na whitelist
+local function estaAutorizado()
+    local username = LocalPlayer.Name
+    
+    -- Verifica whitelist normal
+    for _, nome in ipairs(WHITELIST) do
+        if username:lower() == nome:lower() then
+            return true, "normal"
+        end
+    end
+    
+    -- Verifica whitelist VIP
+    for _, nome in ipairs(WHITELIST_VIP) do
+        if username:lower() == nome:lower() then
+            return true, "vip"
+        end
+    end
+    
+    return false, nil
+end
+
+-- 🎨 UI de Verificação
+local function verificarAcesso()
+    local autorizado, tipo = estaAutorizado()
+    
+    if autorizado then
+        -- ✅ ACESSO LIBERADO
+        print("✅ Bem-vindo, " .. LocalPlayer.Name .. "!")
+        if tipo == "vip" then
+            print("👑 Status: VIP")
+        else
+            print("⭐ Status: Membro")
+        end
+        return true
+    end
+    
+    -- ❌ ACESSO NEGADO - Mostra UI
+    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "WhitelistDenied"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.DisplayOrder = 999999
+    ScreenGui.Parent = playerGui
+
+    local Overlay = Instance.new("Frame", ScreenGui)
+    Overlay.Size = UDim2.new(1,0,1,0)
+    Overlay.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    Overlay.BackgroundTransparency = 0.2
+    Overlay.BorderSizePixel = 0
+
+    local Frame = Instance.new("Frame", ScreenGui)
+    Frame.Size = UDim2.new(0, 450, 0, 300)
+    Frame.Position = UDim2.new(0.5, -225, 0.5, -150)
+    Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    Frame.BorderSizePixel = 0
+
+    local UICorner = Instance.new("UICorner", Frame)
+    UICorner.CornerRadius = UDim.new(0, 16)
+
+    local UIStroke = Instance.new("UIStroke", Frame)
+    UIStroke.Color = Color3.fromRGB(255, 80, 80)
+    UIStroke.Thickness = 2
+    UIStroke.Transparency = 0.5
+
+    local Header = Instance.new("Frame", Frame)
+    Header.Size = UDim2.new(1,0,0,70)
+    Header.BackgroundColor3 = Color3.fromRGB(40,20,20)
+    Header.BorderSizePixel = 0
+    
+    local HeaderCorner = Instance.new("UICorner", Header)
+    HeaderCorner.CornerRadius = UDim.new(0,16)
+
+    local IconLabel = Instance.new("TextLabel", Header)
+    IconLabel.Size = UDim2.new(0,60,0,60)
+    IconLabel.Position = UDim2.new(0.5,-30,0,5)
+    IconLabel.BackgroundTransparency = 1
+    IconLabel.Text = "⛔"
+    IconLabel.TextSize = 40
+    IconLabel.Font = Enum.Font.GothamBold
+
+    local Title = Instance.new("TextLabel", Frame)
+    Title.Size = UDim2.new(1, -40, 0, 30)
+    Title.Position = UDim2.new(0, 20, 0, 85)
+    Title.BackgroundTransparency = 1
+    Title.Text = "ACESSO NEGADO"
+    Title.TextColor3 = Color3.fromRGB(255, 100, 100)
+    Title.TextSize = 20
+    Title.Font = Enum.Font.GothamBold
+
+    local Message = Instance.new("TextLabel", Frame)
+    Message.Size = UDim2.new(1, -60, 0, 100)
+    Message.Position = UDim2.new(0, 30, 0, 125)
+    Message.BackgroundTransparency = 1
+    Message.Text = string.format(
+        "❌ Username não autorizado\n\n" ..
+        "📝 Seu username: %s\n\n" ..
+        "💬 Entre em contato para obter acesso",
+        LocalPlayer.Name
+    )
+    Message.TextColor3 = Color3.fromRGB(200, 200, 220)
+    Message.TextSize = 12
+    Message.Font = Enum.Font.Gotham
+    Message.TextWrapped = true
+    Message.TextYAlignment = Enum.TextYAlignment.Top
+
+    local CloseButton = Instance.new("TextButton", Frame)
+    CloseButton.Size = UDim2.new(0, 390, 0, 45)
+    CloseButton.Position = UDim2.new(0.5, -195, 0, 235)
+    CloseButton.Text = "FECHAR"
+    CloseButton.BackgroundColor3 = Color3.fromRGB(220, 60, 80)
+    CloseButton.TextColor3 = Color3.new(1, 1, 1)
+    CloseButton.TextSize = 15
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.BorderSizePixel = 0
+    CloseButton.AutoButtonColor = false
+
+    local BtnCorner = Instance.new("UICorner", CloseButton)
+    BtnCorner.CornerRadius = UDim.new(0,10)
+
+    CloseButton.MouseButton1Click:Connect(function()
+        LocalPlayer:Kick("⛔ Acesso negado - Username não autorizado")
+    end)
+
+    CloseButton.MouseEnter:Connect(function()
+        TweenService:Create(CloseButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 80, 100)}):Play()
+    end)
+
+    CloseButton.MouseLeave:Connect(function()
+        TweenService:Create(CloseButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220, 60, 80)}):Play()
+    end)
+
+    -- Kick automático após 10 segundos
+    task.spawn(function()
+        task.wait(10)
+        LocalPlayer:Kick("⛔ Acesso negado - Tempo esgotado")
+    end)
+
+    return false
+end
+
+-- ✅ EXECUTA A VERIFICAÇÃO
+if not verificarAcesso() then
+    return -- Para a execução do script
+end
+
+-- 🎉 SE CHEGOU AQUI, O PLAYER ESTÁ AUTORIZADO!
+print("🎮 Script carregado com sucesso!")
+print("👤 Usuário: " .. LocalPlayer.Name)
+
+-- [RESTO DO SEU SCRIPT AQUI...]
+-- (Cole todo o código da sua GUI, funções de farm, etc)
 -- By DiuaryOG
 
 local Players = game:GetService("Players")
@@ -57,178 +231,12 @@ local function setFlag(name, v) taskRunningFlags[name] = v end
 local function getFlag(name) return taskRunningFlags[name] end
 local detectedHeroes = {}
 
+-- key antiga
 
--- VERIFICAR KEY - SEM SALVAMENTO
-local function verificarKey()
-    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "KeySystemGui"
-    ScreenGui.ResetOnSpawn = false
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ScreenGui.DisplayOrder = 999999
-    ScreenGui.Parent = playerGui
+-- teste
 
-    local Overlay = Instance.new("Frame", ScreenGui)
-    Overlay.Size = UDim2.new(1,0,1,0)
-    Overlay.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    Overlay.BackgroundTransparency = 0.3
-    Overlay.BorderSizePixel = 0
 
-    -- Largura aumentada de 400 para 450, altura reduzida de 340 para 300
-    local Frame = Instance.new("Frame", ScreenGui)
-    Frame.Size = UDim2.new(0, 450, 0, 300)
-    Frame.Position = UDim2.new(0.5, -225, 0.5, -150)
-    Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-    Frame.BorderSizePixel = 0
 
-    local UICorner = Instance.new("UICorner", Frame)
-    UICorner.CornerRadius = UDim.new(0, 16)
-
-    local UIStroke = Instance.new("UIStroke", Frame)
-    UIStroke.Color = Color3.fromRGB(80, 140, 255)
-    UIStroke.Thickness = 2
-    UIStroke.Transparency = 0.5
-
-    local Header = Instance.new("Frame", Frame)
-    Header.Size = UDim2.new(1,0,0,70)
-    Header.BackgroundColor3 = Color3.fromRGB(25,25,35)
-    Header.BorderSizePixel = 0
-    
-    local HeaderCorner = Instance.new("UICorner", Header)
-    HeaderCorner.CornerRadius = UDim.new(0,16)
-
-    local IconLabel = Instance.new("TextLabel", Header)
-    IconLabel.Size = UDim2.new(0,60,0,60)
-    IconLabel.Position = UDim2.new(0.5,-30,0,5)
-    IconLabel.BackgroundTransparency = 1
-    IconLabel.Text = "🔐"
-    IconLabel.TextSize = 40
-    IconLabel.Font = Enum.Font.GothamBold
-
-    local Title = Instance.new("TextLabel", Frame)
-    Title.Size = UDim2.new(1, -40, 0, 30)
-    Title.Position = UDim2.new(0, 20, 0, 80)
-    Title.BackgroundTransparency = 1
-    Title.Text = "SISTEMA DE AUTENTICAÇÃO"
-    Title.TextColor3 = Color3.fromRGB(200, 200, 220)
-    Title.TextSize = 16
-    Title.Font = Enum.Font.GothamBold
-
-    -- Texto atualizado para indicar que não há salvamento
-    local SubTitle = Instance.new("TextLabel", Frame)
-    SubTitle.Size = UDim2.new(1, -40, 0, 30)
-    SubTitle.Position = UDim2.new(0, 20, 0, 110)
-    SubTitle.BackgroundTransparency = 1
-    SubTitle.Text = "Digite sua chave de acesso para continuar"
-    SubTitle.TextColor3 = Color3.fromRGB(120, 120, 140)
-    SubTitle.TextSize = 10
-    SubTitle.Font = Enum.Font.Gotham
-    SubTitle.TextWrapped = true
-
-    -- Largura ajustada de 340 para 390
-    local TextBox = Instance.new("TextBox", Frame)
-    TextBox.Size = UDim2.new(0, 390, 0, 45)
-    TextBox.Position = UDim2.new(0.5, -195, 0, 150)
-    TextBox.PlaceholderText = "Insira sua key..."
-    TextBox.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    TextBox.TextColor3 = Color3.new(1, 1, 1)
-    TextBox.TextSize = 14
-    TextBox.Font = Enum.Font.Gotham
-    TextBox.BorderSizePixel = 0
-
-    local TextBoxCorner = Instance.new("UICorner", TextBox)
-    TextBoxCorner.CornerRadius = UDim.new(0,10)
-
-    local TextBoxStroke = Instance.new("UIStroke", TextBox)
-    TextBoxStroke.Color = Color3.fromRGB(50,50,70)
-    TextBoxStroke.Thickness = 1
-
-    -- Largura ajustada de 340 para 390
-    local ConfirmButton = Instance.new("TextButton", Frame)
-    ConfirmButton.Size = UDim2.new(0, 390, 0, 45)
-    ConfirmButton.Position = UDim2.new(0.5, -195, 0, 210)
-    ConfirmButton.Text = "✓ VERIFICAR"
-    ConfirmButton.BackgroundColor3 = Color3.fromRGB(80, 140, 255)
-    ConfirmButton.TextColor3 = Color3.new(1, 1, 1)
-    ConfirmButton.TextSize = 15
-    ConfirmButton.Font = Enum.Font.GothamBold
-    ConfirmButton.BorderSizePixel = 0
-    ConfirmButton.AutoButtonColor = false
-
-    local BtnCorner = Instance.new("UICorner", ConfirmButton)
-    BtnCorner.CornerRadius = UDim.new(0,10)
-
-    local StatusLabel = Instance.new("TextLabel", Frame)
-    StatusLabel.Size = UDim2.new(1, -40, 0, 30)
-    StatusLabel.Position = UDim2.new(0, 20, 0, 265)
-    StatusLabel.BackgroundTransparency = 1
-    StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    StatusLabel.TextSize = 11
-    StatusLabel.Font = Enum.Font.GothamMedium
-    StatusLabel.Text = ""
-    StatusLabel.TextWrapped = true
-
-    ConfirmButton.MouseEnter:Connect(function()
-        TweenService:Create(ConfirmButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100, 160, 255)}):Play()
-    end)
-    ConfirmButton.MouseLeave:Connect(function()
-        TweenService:Create(ConfirmButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 140, 255)}):Play()
-    end)
-
-    local keyValida = false
-    ConfirmButton.MouseButton1Click:Connect(function()
-        local keyInput = TextBox.Text
-        if keyInput == "" then
-            StatusLabel.Text = "⚠️ Por favor, digite uma key válida"
-            StatusLabel.TextColor3 = Color3.fromRGB(255, 120, 120)
-            TextBoxStroke.Color = Color3.fromRGB(255, 80, 80)
-            return
-        end
-        
-        -- Removido salvamento de key - apenas valida
-        if keyInput == KEY_PERMANENTE then
-            keyValida = true
-            StatusLabel.Text = "✓ Autenticação bem-sucedida!\n♾️ Key permanente ativada!"
-            StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
-            ConfirmButton.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
-            ConfirmButton.Text = "✓ SUCESSO"
-            TextBoxStroke.Color = Color3.fromRGB(50, 200, 100)
-            task.wait(1.5)
-            TweenService:Create(Frame, TweenInfo.new(0.3), {Position = UDim2.new(0.5, -225, -0.5, 0)}):Play()
-            TweenService:Create(Overlay, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-            task.wait(0.3)
-            ScreenGui:Destroy()
-            return
-        end
-        
-        -- Removido salvamento de key - apenas valida
-        for _, key in pairs(KEYS_TEMPORARIAS) do
-            if keyInput == key then
-                keyValida = true
-                StatusLabel.Text = "✓ Autenticação bem-sucedida!"
-                StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
-                ConfirmButton.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
-                ConfirmButton.Text = "✓ SUCESSO"
-                TextBoxStroke.Color = Color3.fromRGB(50, 200, 100)
-                task.wait(1.5)
-                TweenService:Create(Frame, TweenInfo.new(0.3), {Position = UDim2.new(0.5, -225, -0.5, 0)}):Play()
-                TweenService:Create(Overlay, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-                task.wait(0.3)
-                ScreenGui:Destroy()
-                return
-            end
-        end
-        
-        StatusLabel.Text = "✗ Key inválida! Tente novamente."
-        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        TextBoxStroke.Color = Color3.fromRGB(255, 80, 80)
-        TextBox.Text = ""
-    end)
-    repeat task.wait(0.1) until keyValida
-end
-
--- Sempre mostra a tela de key ao iniciar
-verificarKey()
 
 -- GUI PRINCIPAL
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
