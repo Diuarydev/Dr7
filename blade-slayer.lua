@@ -17,7 +17,7 @@ local WHITELIST = {
 -- WHITELIST VIP (acesso premium/vitalício)
 local WHITELIST_VIP = {
     "Diuaryy",
-    "",
+    "luaneburgesa",
 }
 
 -- 🔍 Verificar se o player está na whitelist
