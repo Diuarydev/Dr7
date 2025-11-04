@@ -737,7 +737,86 @@ end
 -- ABA FARM
 local clickButton, clickStatus, clickStroke = createButton("AutoClick", "🖱️", farmContainer, 8)
 local rebornButton, rebornStatus, rebornStroke = createButton("AutoReborn", "🔄", farmContainer, 60)
-local openButton, openStatus, openStroke = createButton("AutoOpen Baús", "📦", farmContainer, 112)
+local killAuraButton, killAuraStatus, killAuraStroke = createButton("Kill Aura", "🐾", farmContainer, 112)
+local openButton, openStatus, openStroke = createButton("AutoOpen Baús", "📦", farmContainer, 164)
+
+-- kill aura teste
+-- VARIÁVEIS KILL AURA
+_G.KILL_AURA_ATIVO = false
+
+-- FUNÇÕES KILL AURA
+local function getEnemyGUID(npc)
+    for _, child in pairs(npc:GetChildren()) do
+        if child:IsA("StringValue") then
+            local val = child.Value
+            if type(val) == "string" and val:match("%-") then
+                return val
+            end
+        end
+    end
+    
+    for attrName, attrVal in pairs(npc:GetAttributes()) do
+        if type(attrVal) == "string" and attrVal:match("%-") then
+            return attrVal
+        end
+    end
+    
+    return nil
+end
+
+local function getAllEnemies()
+    local enemies = {}
+    local enemysFolder = Workspace:FindFirstChild("Enemys")
+    
+    if not enemysFolder then return enemies end
+    
+    for _, npc in ipairs(enemysFolder:GetChildren()) do
+        if npc:IsA("Model") and npc:FindFirstChild("Humanoid") and npc.Humanoid.Health > 0 then
+            local hrp = npc:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local guid = getEnemyGUID(npc)
+                if guid then
+                    table.insert(enemies, {
+                        guid = guid,
+                        pos = hrp.Position
+                    })
+                end
+            end
+        end
+    end
+    
+    return enemies
+end
+
+local function attackEnemy(enemyGuid, enemyPos)
+    local ClickEnemy = remotes:FindFirstChild("ClickEnemy")
+    if not ClickEnemy then return end
+    
+    pcall(function()
+        ClickEnemy:InvokeServer({
+            enemyGuid = enemyGuid,
+            enemyPos = enemyPos
+        })
+    end)
+end
+
+local function killAuraLoop()
+    if getFlag("killAura") then return end
+    setFlag("killAura", true)
+    
+    while _G.KILL_AURA_ATIVO do
+        task.wait(0.05)
+        
+        local enemies = getAllEnemies()
+        
+        for _, enemy in ipairs(enemies) do
+            if not _G.KILL_AURA_ATIVO then break end
+            attackEnemy(enemy.guid, enemy.pos)
+        end
+    end
+    
+    setFlag("killAura", false)
+end
 
 
 -- ABA MARCA - Sistema de reroll individual por item (removido AutoReroll antigo)
@@ -1770,6 +1849,19 @@ rebornButton.MouseButton1Click:Connect(function()
     else
         TweenService:Create(rebornStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,60,80)}):Play()
         TweenService:Create(rebornStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(180,40,60)}):Play()
+    end
+end)
+
+killAuraButton.MouseButton1Click:Connect(function()
+    _G.KILL_AURA_ATIVO = not _G.KILL_AURA_ATIVO
+    killAuraStatus.Text = _G.KILL_AURA_ATIVO and "ON" or "OFF"
+    if _G.KILL_AURA_ATIVO then
+        TweenService:Create(killAuraStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50,200,100)}):Play()
+        TweenService:Create(killAuraStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(40,180,80)}):Play()
+        task.spawn(killAuraLoop)
+    else
+        TweenService:Create(killAuraStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,60,80)}):Play()
+        TweenService:Create(killAuraStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(180,40,60)}):Play()
     end
 end)
 
