@@ -7,7 +7,7 @@ local LocalPlayer = Players.LocalPlayer
 
 -- ⚙️ CONFIGURAÇÃO - ADICIONE OS USERNAMES AUTORIZADOS AQUI
 local WHITELIST = {
-    "Diuaryy",           -- Você
+    "clt0",           -- Você
     "teste1",     -- Cliente 1
     "clt2",        -- Cliente 2
     "clt3",       -- Cliente 3
@@ -163,15 +163,10 @@ end
 
 -- ✅ EXECUTA A VERIFICAÇÃO
 if not verificarAcesso() then
-    return -- Para a execução do script
+    return 
 end
 
--- 🎉 SE CHEGOU AQUI, O PLAYER ESTÁ AUTORIZADO!
-print("🎮 Script carregado com sucesso!")
-print("👤 Usuário: " .. LocalPlayer.Name)
-
--- [RESTO DO SEU SCRIPT AQUI...]
--- (Cole todo o código da sua GUI, funções de farm, etc)
+-- SE CHEGOU AQUI, O PLAYER ESTÁ AUTORIZADO!
 -- By DiuaryOG
 
 local Players = game:GetService("Players")
@@ -230,13 +225,6 @@ local taskRunningFlags = {}
 local function setFlag(name, v) taskRunningFlags[name] = v end
 local function getFlag(name) return taskRunningFlags[name] end
 local detectedHeroes = {}
-
--- key antiga
-
--- teste
-
-
-
 
 -- GUI PRINCIPAL
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -310,7 +298,6 @@ do
     end)
 end
 
--- Largura aumentada de 450 para 520, altura reduzida de 480 para 420
 -- HUB FRAME OTIMIZADO
 local hubFrame = Instance.new("Frame", screenGui)
 hubFrame.Size = UDim2.new(0, 520, 0, 420)
@@ -338,7 +325,6 @@ accentLine.BorderSizePixel = 0
 local accentCorner = Instance.new("UICorner", accentLine)
 accentCorner.CornerRadius = UDim.new(0,18)
 
--- Header reduzido de 55 para 50
 -- Header reduzido
 local header = Instance.new("Frame", hubFrame)
 header.Size = UDim2.new(1,0,0,50)
@@ -660,7 +646,6 @@ talismaTab.MouseButton1Click:Connect(function() switchTab("Talismã") end)
 fusePotionTab.MouseButton1Click:Connect(function() switchTab("FusePotion") end)
 octTab.MouseButton1Click:Connect(function() switchTab("OCT") end)
 
--- Largura dos botões aumentada de 325 para 380
 -- Button creator reduzido
 local function createButton(text, icon, parent, yPos)
     local btn = Instance.new("TextButton", parent)
@@ -740,7 +725,6 @@ local rebornButton, rebornStatus, rebornStroke = createButton("AutoReborn", "�
 local killAuraButton, killAuraStatus, killAuraStroke = createButton("Kill Aura", "🐾", farmContainer, 112)
 local openButton, openStatus, openStroke = createButton("AutoOpen Baús", "📦", farmContainer, 164)
 
--- kill aura teste
 -- VARIÁVEIS KILL AURA
 _G.KILL_AURA_ATIVO = false
 
@@ -819,7 +803,7 @@ local function killAuraLoop()
 end
 
 
--- ABA MARCA - Sistema de reroll individual por item (removido AutoReroll antigo)
+-- ABA MARCA
 local marcaInfo = Instance.new("TextLabel", marcaContainer)
 marcaInfo.Size = UDim2.new(0,400,0,40)
 marcaInfo.Position = UDim2.new(0,10,0,8)
@@ -1025,7 +1009,7 @@ do
             if oldestGuid then
                 detectedHeroes[oldestGuid] = nil
                 table.remove(detectionOrder, 1)
-                print("🔄 DMG: Pet antigo removido, novo pet adicionado!")
+                print("DMG: novo pet adicionado!")
             end
         end
         
@@ -1034,7 +1018,6 @@ do
         
         local count2 = 0
         for _ in pairs(detectedHeroes) do count2 = count2 + 1 end
-        print("✅ DMG: Pet detectado (" .. count2 .. "/5) - GUID: " .. string.sub(newGuid, 1, 8) .. "...")
     end
 
     -- Hook que intercepta APENAS quando VOCÊ usa o remote
@@ -1063,7 +1046,6 @@ do
             return oldNamecall(self, ...)
         end)
         
-        print("🔍 DMG: Sistema ativo! Use seus pets para detectá-los.")
     end)
 
     local function autoFireLoop()
@@ -1104,21 +1086,19 @@ do
         if autoFireEnabled then
             TweenService:Create(dmgStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50,200,100)}):Play()
             TweenService:Create(dmgStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(40,180,80)}):Play()
-            print("⚔️ DMG ativado!")
             
             local count = 0
             for _ in pairs(detectedHeroes) do count = count + 1 end
             if count == 0 then
-                print("⚠️ Use seus pets para detectá-los automaticamente!")
+
             else
-                print("✅ " .. count .. " pet(s) detectado(s)!")
+
             end
             
             task.spawn(autoFireLoop)
         else
             TweenService:Create(dmgStatus, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,60,80)}):Play()
             TweenService:Create(dmgStroke, TweenInfo.new(0.2), {Color = Color3.fromRGB(180,40,60)}):Play()
-            print("⚔️ DMG desativado!")
         end
     end)
 end
