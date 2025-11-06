@@ -1635,9 +1635,9 @@ game:GetService("RunService").RenderStepped:Connect(function()
         local relativeX = math.clamp(mouse.X - octAttackSlider.AbsolutePosition.X, 0, octAttackSlider.AbsoluteSize.X)
         local percentage = relativeX / octAttackSlider.AbsoluteSize.X
         octAttackBtn.Position = UDim2.new(percentage, -10, 0.5, -10)
-        attackSpeedOct = 0.001 + (percentage * 0.999)
+        attackSpeedOct = 0.001 + (percentage * 0.001)
         octAttackLabel.Text = string.format("⚔️ Vel. Ataque: %.3fs", attackSpeedOct)
-        if attackSpeedOct < 0.01 then
+        if attackSpeedOct < 0.001 then
             octPerfLabel.Text = "⚠️ Performance: Muito Rápido!"
             octPerfLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
         else
@@ -1650,7 +1650,7 @@ game:GetService("RunService").RenderStepped:Connect(function()
         local relativeX = math.clamp(mouse.X - octLoopSlider.AbsolutePosition.X, 0, octLoopSlider.AbsoluteSize.X)
         local percentage = relativeX / octLoopSlider.AbsoluteSize.X
         octLoopBtn.Position = UDim2.new(percentage, -10, 0.5, -10)
-        loopSpeedOct = 0.01 + (percentage * 0.99)
+        loopSpeedOct = 0.01 + (percentage * 0.001)
         octLoopLabel.Text = string.format("🔄 Vel. Loop: %.3fs", loopSpeedOct)
     end
 end)
@@ -1700,7 +1700,7 @@ octButton.MouseButton1Click:Connect(function()
     end
 end)
 
-task.wait(0.5)
+task.wait(0.1)
 updateOctopusGUIDs()
 
 
