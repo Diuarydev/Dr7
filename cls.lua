@@ -79,101 +79,142 @@ else
 end
 
 -- ======================================
--- AUTO RAID CONTÍNUO
+-- AUTO RAID FINAL - COM BOTÃO ON/OFF
 -- ======================================
 
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+
+-- CONFIGURAÇÃO DAS RAIDS
 local raids = {
-    {Id=1000001, RaidId=50301, MapId=50028, IsOpen=1},
-    {Id=1000002, RaidId=50302, MapId=50036, IsOpen=1},
+    [1000001] = {
+        Id = 1000001,
+        MapId = 50301,
+        LobbyMapId = 50028,
+        Name = "Monster Siege 1 (Mundo 19)"
+    },
+    [1000002] = {
+        Id = 1000002,
+        MapId = 50302,
+        LobbyMapId = 50036,
+        Name = "Monster Siege 2 (Mundo 36)"
+    }
 }
 
 local autoRaidEnabled = false
-local autoRaidThread
+local emRaid = false
+local raidAtual = nil
 
--- ====================
 -- GUI
--- ====================
-local player = game.Players.LocalPlayer
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AutoRaidGUI"
-screenGui.Parent = player:WaitForChild("PlayerGui")
+local gui = Instance.new("ScreenGui")
+gui.Name = "AutoRaidGUI"
+gui.ResetOnSpawn = false
+gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 180, 0, 70)
+frame.Size = UDim2.new(0, 200, 0, 70)
 frame.Position = UDim2.new(0.8, 0, 0.1, 0)
-frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,35)
 frame.Active = true
 frame.Draggable = true
-frame.Parent = screenGui
+frame.Parent = gui
 
--- Botão ON/OFF
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,10)
+
 local button = Instance.new("TextButton")
-button.Size = UDim2.new(1, -10, 0, 30)
+button.Size = UDim2.new(1, -10, 0, 35)
 button.Position = UDim2.new(0, 5, 0, 5)
-button.Text = "AutoRaid: OFF"
-button.BackgroundColor3 = Color3.fromRGB(100,100,100)
-button.TextColor3 = Color3.fromRGB(255,255,255)
+button.Text = "Auto Raid: OFF"
+button.BackgroundColor3 = Color3.fromRGB(220,60,80)
+button.TextColor3 = Color3.new(1,1,1)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 14
 button.Parent = frame
 
--- Label de status
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, -10, 0, 15)
-statusLabel.Position = UDim2.new(0, 5, 0, 40)
-statusLabel.BackgroundTransparency = 1
-statusLabel.TextColor3 = Color3.fromRGB(200,200,200)
-statusLabel.Text = "Desligado"
-statusLabel.TextScaled = true
-statusLabel.Font = Enum.Font.SourceSans
-statusLabel.Parent = frame
+Instance.new("UICorner", button).CornerRadius = UDim.new(0,8)
 
--- ====================
--- Funções de raid
--- ====================
-local function startRaid(raid)
-    -- Teleporta e entra na raid
-    Remotes.StartLocalPlayerTeleport:FireServer({[1]={mapId=raid.RaidId}})
-    wait(1)
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, -10, 0, 20)
+status.Position = UDim2.new(0, 5, 0, 45)
+status.BackgroundTransparency = 1
+status.Text = "Aguardando..."
+status.TextColor3 = Color3.fromRGB(200,200,200)
+status.Font = Enum.Font.Gotham
+status.TextSize = 11
+status.Parent = frame
+
+-- TELEPORTA PRO LOBBY
+local function irProLobby(raid)
+    Remotes.LocalPlayerTeleport:FireServer({ mapId = raid.LobbyMapId })
+end
+
+-- ENTRA NA RAID
+local function entrarNaRaid(raid)
+    if emRaid or not autoRaidEnabled then return end
+
+    emRaid = true
+    raidAtual = raid
+    status.Text = "Entrando: "..raid.Name
+
+    Remotes.StartLocalPlayerTeleport:FireServer({ mapId = raid.MapId })
+    task.wait()
     Remotes.EnterCityRaidMap:FireServer(raid.Id)
-    print("Raid iniciada: "..raid.RaidId)
 end
 
--- Espera com possibilidade de cancelar (verifica OFF a cada segundo)
-local function waitWithCancel(seconds)
-    local elapsed = 0
-    while elapsed < seconds do
-        if not autoRaidEnabled then
-            return false -- cancelado
-        end
-        wait(1)
-        elapsed = elapsed + 1
-    end
-    return true -- terminou normalmente
+-- SAI DA RAID
+local function sairDaRaid()
+    if not raidAtual then return end
+
+    status.Text = "Saindo..."
+    Remotes.QuitCityRaidMap:FireServer(raidAtual.Id)
+
+    emRaid = false
+    raidAtual = nil
+    status.Text = "Aguardando..."
 end
 
--- Loop contínuo de AutoRaid
-local function autoRaidLoop()
-    while autoRaidEnabled do
-        for _, raid in ipairs(raids) do
-            if raid.IsOpen == 1 then
-                startRaid(raid)
-                print("Esperando 2 minutos para completar a raid "..raid.RaidId.."...")
-                waitWithCancel(120) -- espera completar a raid
-            end
-        end
-        wait(5) -- evita loop muito rápido
-    end
-end
+-- RAID COMPLETA
+Remotes.ChallengeRaidsSuccess.OnClientEvent:Connect(function()
+    if not autoRaidEnabled or not emRaid then return end
+    task.wait(10)
+    sairDaRaid()
+end)
 
--- ====================
--- Toggle ON/OFF
--- ====================
-button.MouseButton1Click:Connect(function()
-    autoRaidEnabled = not autoRaidEnabled
-    button.Text = "AutoRaid: "..(autoRaidEnabled and "ON" or "OFF")
-    statusLabel.Text = autoRaidEnabled and "Ligado" or "Desligado"
+-- RAID FALHOU
+Remotes.ChallengeRaidsFail.OnClientEvent:Connect(function()
+    if not autoRaidEnabled or not emRaid then return end
+    task.wait(10)
+    sairDaRaid()
+end)
 
-    if autoRaidEnabled then
-        -- inicia o loop em uma thread separada
-        autoRaidThread = spawn(autoRaidLoop)
+-- DETECTA RAID ABERTA
+Remotes.UpdateCityRaidInfo.OnClientEvent:Connect(function(data)
+    if not autoRaidEnabled or emRaid then return end
+    if type(data) ~= "table" then return end
+
+    local raidId = data.id or data.Id or data.raidId
+    local raid = raids[raidId]
+    if not raid then return end
+
+    if data.action == "OpenCityRaid" or data.isOpen or data.rankInfo then
+        status.Text = raid.Name.." aberta!"
+        irProLobby(raid)
+        task.wait()
+        entrarNaRaid(raid)
     end
 end)
+
+-- BOTÃO ON / OFF
+button.MouseButton1Click:Connect(function()
+    autoRaidEnabled = not autoRaidEnabled
+    button.Text = "Auto Raid: "..(autoRaidEnabled and "ON" or "OFF")
+    button.BackgroundColor3 = autoRaidEnabled
+        and Color3.fromRGB(50,200,100)
+        or Color3.fromRGB(220,60,80)
+
+    status.Text = autoRaidEnabled and "Ativado!" or "Aguardando..."
+end)
+
+print("AUTO RAID FINAL COM BOTÃO CARREGADO")
